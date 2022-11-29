@@ -1360,9 +1360,9 @@ SyntaxInformation[ToCanonicalForm]={"ArgumentsPattern"->{__}};
 
 ToCanonicalForm[reactions__]:=
 	Flatten[{reactions} /. Reactions] /. 
-					  Join[Thread[{LeftRightArrow,DoubleLeftRightArrow,LongLeftRightArrow,DoubleLongLeftRightArrow,RightArrowLeftArrow}->Equilibrium],
+					  Join[Thread[{LeftRightArrow,DoubleLeftRightArrow,LongLeftRightArrow,DoubleLongLeftRightArrow,RightArrowLeftArrow,TwoWayRule,UndirectedEdge}->Equilibrium],
 									{LeftArrowRightArrow->ReverseEquilibrium},
-									Thread[{Rule,ShortRightArrow,DoubleRightArrow,LongRightArrow,DoubleLongRightArrow}->RightArrow],
+									Thread[{Rule,ShortRightArrow,DoubleRightArrow,LongRightArrow,DoubleLongRightArrow,DirectedEdge}->RightArrow],
 									Thread[{ShortLeftArrow,DoubleLeftArrow,LongLeftArrow,DoubleLongLeftArrow}->LeftArrow]];
 
 ToCanonicalForm[___] := (Message[ToCanonicalForm::"badarg"]; $Failed)
@@ -1955,6 +1955,34 @@ AcyclicVolpertGraphQ[{reactions__}, externals:(_?VectorQ|OptionsPattern[])] :=
 	AcyclicGraphQ[Graph[First/@First[Check[ReactionsData[{reactions},externals]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]]]];
 
 AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
+
+
+(* ::Subsubsection::Closed:: *)
+(*SCLGraph, ShowSCLGraph*)
+
+
+ShowSCLGraph::usage = "Given a reactionData returns the SCL graph of the mechanism. The linkage classes are denoted by \!\(\*SubscriptBox[\(L\), \(i\)]\) where i is theindex of the linkage class in\
+ WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
+SCLGraph[reactionData_,opts___?OptionQ] :=
+ Block[{linkageClasses = WeaklyConnectedGraphComponents[Graph[reactionData["fhjgraphedges"]]],species=reactionData["species"],edges, edgeLabels},
+ {edges, edgeLabels} = Flatten[
+         Function[complex, Function[species,{#[[1]]->species,complex}] /@ complextospecies[complex]]
+         /@ DeleteDuplicates[Flatten[ReactionsToList[ToCanonicalForm[EdgeList[#[[2]]]]]/.RightArrow->List]] &
+         /@ ({ Subscript[Global`L, #]& /@ Range[Length[linkageClasses]],linkageClasses}//Transpose),
+         2
+ ]// Transpose;
+ UndirectedGraph[edges,EdgeLabels->Table[edges[[i]]->edgeLabels[[i]],{i, Length[edges]}]]
+]
+
+
+ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of the mechanism. The linkage classes are denoted by numbers. The number of a vertex represents\
+ the index of its linkage class in WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
+
+ShowSCLGraph::badarg = "Illegal argument of function ShowSCLGraph.";
+
+ShowSCLGraph[reactionData_,opts___?OptionQ]:=Block[{g=SCLGraph[reactionData,opts]},
+ GraphPlot[g,opts,GraphLayout->"BipartiteEmbedding"]
+]
 
 
 (* ::Subsubsection::Closed:: *)
