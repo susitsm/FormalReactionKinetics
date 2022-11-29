@@ -929,7 +929,7 @@ Options[CHEMKINImport] := {Memo -> False};
 CHEMKINImport::usage = "CHEMKINImport[file] imports all the relevant data from a CHEMKIN file.";
 
 
-CHEMKINImport::illarg = "The argument of CHEMKINImport needs a string with a file name the extension of which is .dat.";
+CHEMKINImport::illarg = "The argument of CHEMKINImport needs a string with a file name the extension of which is .dat or .inp.";
 CHEMKINImport::badname = "At least one of the arguments '`1`' is a non-identified property. Try CHEMKINImport[\"Properties\"].";
 CHEMKINImport::bimp = "Some problem occurred in the import procedure. For possible further issues, see the function Import."; 
 CHEMKINImport::misdat = "Missing DATA: the CHEMKIN file to be imported does not contain data for '`1`'.";
@@ -945,7 +945,7 @@ CHEMKINImport[filename_?StringQ]["All"] := CHEMKINImport[filename][PropertiesCHE
 
 CHEMKINImport[filename_?StringQ][data__?StringQ] := 
 	(
-	If[ Last[StringSplit[StringTrim[filename],"."]] =!= "dat", 
+	If[ Last[StringSplit[StringTrim[filename],"."]] =!= "dat" && Last[StringSplit[StringTrim[filename],"."]] =!= "inp",
 		Message[CHEMKINImport::"illarg"];
 		Return[$Failed];
 	];
