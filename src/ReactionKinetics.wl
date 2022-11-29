@@ -210,12 +210,12 @@ Global`z::usage = "Default symbol for the variable of the probability generating
 AvogadrosNumber::usage = "AvogadrosNumber (1/Mole) returns the Avogadro constant that is the number of constituent particles contained \
 in the amount of substance given by one mole.";
 
-AvogadrosNumber = 6.02214179`*^23; (*1 / Mole*)
+AvogadrosNumber = QuantityMagnitude[UnitConvert[Quantity["AvogadroNumber"]]]; (*1 / Mole*)
 
 MolarGasConstant::usage = "MolarGasConstant (Joule/(Kelvin*Mole)) returns the ideal gas constant that is the constant of proportionality \
 expressing the relation between the energy scale and the temperature scale in physics.";
 
-MolarGasConstant = 8.3144598; (*Joule / Kelvin / Mole*)
+MolarGasConstant = QuantityMagnitude[UnitConvert[Quantity["MolarGasConstant"]]]; (*Joule / Kelvin / Mole*)
 
 
 (* ::Subsubsection::Closed:: *)
@@ -224,9 +224,6 @@ MolarGasConstant = 8.3144598; (*Joule / Kelvin / Mole*)
 
 ZeroVectorQ::usage = "ZeroVectorQ[list] checks whether list has only zero elements.";
 ZeroVectorQ[v_List] := Max[Abs[v]] === 0;
-
-ComponentwiseLessEqualQ::usage = "ComponentwiseLessEqualQ[v1,v2] checks whether the components of vector v2 are greater than or equal to that of vector v1.";
-ComponentwiseLessEqualQ[v1_?VectorQ, v2_?VectorQ] := NonPositive[Max[v1 - v2]];
 
 
 VariablesQ[x_] := And@@((Head[#]===Symbol)&/@x);
@@ -248,7 +245,7 @@ If[$VersionNumber < 10,
 ];
 
 MinimalQ[v_?VectorQ, vlist_List] :=
-	If[Scan[If[ComponentwiseLessEqualQ[#, v], Return[False]] &, vlist] === False, False, True];
+	If[Scan[If[VectorLessEqual[#, v], Return[False]] &, vlist] === False, False, True];
 
 SMaux[minimals_List, {}] := minimals;
 SMaux[minimals_List, {next_List, rest___List}] :=
@@ -4497,7 +4494,6 @@ SetAttributes[
 	(*ReactionQ,*)
 	SelectMinimalDecompositions,
 (**)
-	ComponentwiseLessEqualQ, 
 	ZeroVectorQ 
     },
 	{Protected,ReadProtected}
