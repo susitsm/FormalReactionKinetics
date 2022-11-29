@@ -142,7 +142,7 @@ CombinatorialMoments::usage = "An option for function MomentEquations. If Combin
 ComplexColors::usage = "An option for function ShowFHJGraph. E.g. ComplexColors \[Rule] listcolors colors the complexes (i.e. edges) of the FHJ graph according to listcolors.";
 Conditions::usage = "An option for function StationaryPoints. E.g. Conditions \[Rule] list adds the list to the constraints stationary points should obey.";
 ContejeanDevie::usage = "Method \[Rule] ContejeanDevie is an option for Decompositions for decomposing an overall reaction.";
-EdgeLabeled::usage = "An option for function ShowVolpertGraph. If EdgeLabeled \[Rule] True, all the stoichiometric coefficients are put \
+EdgeLabels::usage = "An option for function ShowVolpertGraph. If EdgeLabels \[Rule] True, all the stoichiometric coefficients are put \
 on the directed edges of the Volpert graph.";
 ExternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
 The list of external species of a reaction can be given by ExternalSpecies \[Rule] listexternals.";
@@ -1838,7 +1838,7 @@ GraphPlotFunction2Q := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlo
 
 ShowVolpertGraph::usage = "ShowVolpertGraph[{reactions},options] visualizes the Volpert graph of the reaction.";
 
-Options[ShowVolpertGraph] := {ExternalSpecies->{}, PlotFunction->"GraphPlot", EdgeLabeled -> False, 
+Options[ShowVolpertGraph] := {ExternalSpecies->{}, PlotFunction->"GraphPlot", EdgeLabels -> False,
 								Highlight -> {}, SubgraphHighlight -> False, Bipartite -> False, Indexed -> False, Numbered -> False};
 
 ShowVolpertGraph::badarg = "Illegal argument of function ShowVolpertGraph.";
@@ -1848,7 +1848,7 @@ GraphPlot, GraphPlot3D, LayeredGraphPlot or TreePlot.";
 ShowVolpertGraph[{reactions__},opts___?OptionQ] := 
 	Module[{
 			fullopts, graphfunc, exps, vgp, vindices, vtempind, 
-			vg, vind, complx, numbd, ind, initsp, highlight, edgelabeled, 
+			vg, vind, complx, numbd, ind, initsp, highlight, edgelabels,
 			nopts, g, bipd, fhj, sp, m, r
 		   },
 
@@ -1891,11 +1891,11 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 					highlight = highlight /. vind;
 			];
 
-			edgelabeled = (EdgeLabeled /. FilterRules[fullopts, EdgeLabeled]) === True;
+			edgelabels = (EdgeLabels /. FilterRules[fullopts, EdgeLabels]) === True;
 
 			If[ highlight =!= {},
 				
-				If[ edgelabeled, vg = Labeled@@# &/@ vg;, vg = First /@ vg; ];
+				If[ edgelabels, vg = Labeled@@# &/@ vg;, vg = First /@ vg; ];
 				(*ez itt erzeketlen a plotfunction-ra es a bipartite-re*)
 				g = Graph[vg];
 				If[ (SubgraphHighlight /. FilterRules[fullopts,SubgraphHighlight]) === True, highlight = Subgraph[g,highlight];]; 
@@ -1904,13 +1904,13 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 				nopts = FilterRules[{opts},Options[ToExpression[graphfunc]]];		
 				Switch[graphfunc,
 						"Graph",
-							If[ edgelabeled, vg = Labeled@@# &/@ vg;, vg = First /@ vg; ]; 
+							If[ edgelabels, vg = Labeled@@# &/@ vg;, vg = First /@ vg; ];
 							(*ez meg itt erzeketlen a bipartite-re*)
 							Graph[vg, nopts],
 						_, 
 							bipd = (Bipartite /. FilterRules[fullopts, Bipartite]) === True;
 							nopts = Join[(FilterRules[nopts, EdgeLabeling] /. {}->{EdgeLabeling->False}), nopts];
-							If[ edgelabeled, nopts = Join[{EdgeLabeling -> True}, nopts]; ];
+							If[ edgelabels, nopts = Join[{EdgeLabeling -> True}, nopts]; ];
 							If[ bipd,
 								fhj = ReactionsData[{reactions},exps]["fhjgraphedges"] /. Rule->RightArrow;
 								{m, r} = ReactionsData[{reactions},exps]["M","R"];
@@ -1927,8 +1927,8 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 									EdgeRenderingFunction -> (
 										If[
 											MemberQ[{RightArrow,Integer},Head[If[VectorQ[#2[[1]]],#2[[1,1]],#2[[1]]]]], 
-											{Orange, Arrow[#1,0.15], If[edgelabeled, Inset[Cases[vg,{Rule@@#2,x_}:>x][[1]], Mean[#1], Background->White], Sequence[]]}, 
-											{Blue, Arrow[#1,0.15], If[edgelabeled, Inset[Cases[vg,{Rule@@#2,x_}:>x][[1]], Mean[#1], Background->White], Sequence[]]}
+											{Orange, Arrow[#1,0.15], If[edgelabels, Inset[Cases[vg,{Rule@@#2,x_}:>x][[1]], Mean[#1], Background->White], Sequence[]]},
+											{Blue, Arrow[#1,0.15], If[edgelabels, Inset[Cases[vg,{Rule@@#2,x_}:>x][[1]], Mean[#1], Background->White], Sequence[]]}
 										]&),
 									VertexCoordinateRules -> 
 										Join[
@@ -4379,7 +4379,7 @@ Protect[
 	CombinatorialMoments,
 	ComplexColors,
 	Conditions,
-	EdgeLabeled,
+	EdgeLabels,
 	ExternalSpecies,
 	FixedStepSize,
 	FormattedOutput,
