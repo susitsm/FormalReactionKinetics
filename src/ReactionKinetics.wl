@@ -58,6 +58,9 @@ Reaction Kinetics: Exercises, Programs and Theorems. Mathematica for determinist
 
 
 BeginPackage["ReactionKinetics`"]
+Unprotect["ReactionKinetics`*"];
+ClearAll["ReactionKinetics`*"];
+ClearAll["ReactionKinetics`Private`*"];
 
 
 If[$VersionNumber<6, 
@@ -97,141 +100,9 @@ If[$VersionNumber < 8,
 
 
 Unprotect[
-	AvogadrosNumber,
 	$ReactionKinetics,
 	$ReactionKineticsPackageLoaded,
-	$ReactionKineticsVersionNumber,
-	(**)
-	Global`aExplodator,(*Explodator*)
-	Global`bExplodator,(*Explodator*)
-	Global`fOregonator,(*Oregonator*)
-	(**)
-	Models,(**)
-	Reactions,
-	BioModels,
-	BioReactions,
-	GetReaction,
-	(**)
-	Global`c,(*concentration*)
-	ComplexColors,(**)
-	ExternalSpecies,
-	FormattedOutput,
-	GeneratedRateCoefficient,
-	MassAction,
-	MassActionKinetics,
-	PlotFunction,
-	StronglyConnectedComponentsColors,
-	ToCanonicalForm,(**)
-	ToReversible,
-	ReactionsData,(**)
-	ReversibleQ,
-	WeaklyReversibleQ,
-	ShowFHJGraph,
-	AcyclicVolpertGraphQ,
-	ShowVolpertGraph,
-	Atoms,(**)
-	ToAtomMatrix,
-	AtomConservingQ,
-	AtomsQ,
-	FromAtomMatrix,
-	DetailedBalanced,
-	(**)
-	Global`t, (*time*)
-	Global`k, (*reaction rate coefficient*)
-	Global`\[Rho], (*mass vector*)
-	Conditions, (**)
-	Positivity,
-	TimeLimit,
-	RightHandSide, (**)
-	DeterministicModel,
-	Concentrations,
-	StationaryPoints,
-	GammaLeftNullSpace,
-	EigensystemJacobian,
-	AbsoluteConcentrationRobustness, (**)
-	(**)
-	VolpertIndexing, (**)
-	(**)
-	Global`\[DoubleStruckCapitalE],(*expected value*)
-	Global`g,(*generating func*)
-	Global`\[CapitalPi],(*stat distr*)
-	Global`P,(*probability*)
-	Global`T,(*temperature*)
-(*	Global`x,(*state vector*)*)
-	Global`X, (*species*)
-	(**)
-	Global`z,(*gen func arg*)
-	CombinatorialMoments, (**)
-	FixedStepSize,
-	MaxIteration,
-	Method,
-	Species,
-	Verbose,
-	Volume, (**)
-	MassConservationRelations, (**)
-	MasterEquation,
-	MolarGasConstant,
-	StationaryProbabilityDistributionEquation,
-	ProbabilityGeneratingFunctionEquation,
-	SolveProbabilityGeneratingFunctionEquation,
-	MomentEquations,
-	DependencyGraph,
-	ShowDependencyGraph,
-	Simulation, (**)
-	SimulationPlot,
-	SimulationPlot2D,
-	SimulationPlot3D,
-	(**)
-	OpenReactionKineticsPalette,
-	OpenReactionKineticsNamesPalette,
-	ReactionRatesNotebook,
-
-	(**)
-	CHEMKINExport,
-	CHEMKINImport, 
-	FromStoichiometry, 
-	DeleteAutocatalysis,
-	ReversibleFHJRepresentation,
-	Memo,
-	EdgeLabeled,
-	Highlight,
-	Bipartite,
-	Indexed, 
-	Numbered,
-	SubgraphHighlight,
-	Side,
-	FilterReactions,
-	MinFHJWeaklyConnectedComponents,
-	MinFHJStronglyConnectedComponents,
-	MaxFHJWeaklyConnectedComponents,
-	MaxFHJStronglyConnectedComponents
-	(*VolpertSpecies*)
-];
-
-
-Unprotect[
-	ContejeanDevie,
-	CoveringDecompositionSet,
-	(*DecompositionQ,*)
-	Decompositions,
-	(*ElementaryReactionQ,*)
-	ElementaryReactions,
-	FastSelection,
-	Filter,
-	(*GeneralizedDecompositionQ,*)
-	GreedySelection,
-	LPBased,
-	MinimalDecompositions,
-	ObjectiveFunction,
-	Obligatory,
-	Omittable,
-	OriginalSelection,
-	Preprocess,
-	(*ReactionQ,*)
-	SelectMinimalDecompositions,
-(**)
-	ComponentwiseLessEqualQ, 
-	ZeroVectorQ
+	$ReactionKineticsVersionNumber
 ];
 
 
@@ -2136,7 +2007,7 @@ ToAtomMatrix[molecules_?VectorQ,opts___?OptionQ]:=
 		fout = (FormattedOutput /. Flatten[{opts}]) /. FormattedOutput -> False;
 
 		If[fout,
-			Grid[MapThread[Prepend,{Prepend@@({atomm, molecules}),Prepend[ats,"Atoms\Molecules"]},1], FilterRules[{opts}, Options[Grid]]],
+			Grid[MapThread[Prepend,{Prepend@@({atomm, molecules}),Prepend[ats,"Atoms\\Molecules"]},1], FilterRules[{opts}, Options[Grid]]],
 
 			ind = Sort[MapIndexed[{#1,First[#2]}&, Most[ats]]];
 			Join[{Join[First/@ind,{"charge"}]}, {Join[atomm[[#]]& /@ (Last/@ind), {Last[atomm]}]}]
@@ -4487,7 +4358,7 @@ SetAttributes[
 		$ReactionKineticsPackageLoaded,
 		$ReactionKineticsVersionNumber
 	},
-	{Protected,Locked}
+	{Protected}
 ];
 
 
