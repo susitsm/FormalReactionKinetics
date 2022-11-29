@@ -156,6 +156,7 @@ GreedySelection::usage = "ObjectiveFunction \[Rule] GreedySelection is an option
 CoveringDecompositionSet to specify how the consecutive decompositions should be searched for.";
 Highlight::usage = "An option for function ShowVolpertGraph. Highlight \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices \
 depending on SubgraphHighlight \[Rule] False or True.";
+Highlighted::usage = "An option for function ShowVolpertGraph. Highlighted \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices.";
 Indexed::usage = "An option for function ShowVolpertGraph. Indexed \[Rule] listspecies displays the Volpert graph with Volpert indexes, \
 where listspecies is considered as the initial set of species.";
 LPBased::usage = "Method \[Rule] LPBased is an option for Decompositions using linear programming to obtain decompositions for an overall reaction.";
@@ -181,8 +182,6 @@ Species::usage = "An option for functions SimulationPlot, SimulationPlot2D and S
 Species \[Rule] listspecies only plots those species given by listspecies.";
 StronglyConnectedComponentsColors::usage = "An option for function ShowFHJGraph. StronglyConnectedComponentsColors \[Rule] listcolors colors the strongly connected \
 components of the FHJ graph according to listcolors.";
-SubgraphHighlight::usage = "An option for function ShowVolpertGraph. SubgraphHighlight \[Rule] False highlights the vertices otherwise it highlights \
-the subgraph induced by listvertices given by Highlight \[Rule] listvertices.";
 TimeLimit::usage = "An option for function AbsoluteConcentrationRobustness. \
 TimeLimit \[Rule] timelimit suppresses calculations if its duration exceeds timelimit.";
 Tolerance::usage = "An option for function Simulation (see approximation methods).";
@@ -1838,8 +1837,7 @@ GraphPlotFunction2Q := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlo
 
 ShowVolpertGraph::usage = "ShowVolpertGraph[{reactions},options] visualizes the Volpert graph of the reaction.";
 
-Options[ShowVolpertGraph] := {ExternalSpecies->{}, PlotFunction->"GraphPlot", EdgeLabels -> False,
-								Highlight -> {}, SubgraphHighlight -> False, Bipartite -> False, Indexed -> False, Numbered -> False};
+Options[ShowVolpertGraph] := {ExternalSpecies->{}, PlotFunction->"GraphPlot", EdgeLabels -> False, Highlighted -> {}, Indexed -> False, Numbered -> False};
 
 ShowVolpertGraph::badarg = "Illegal argument of function ShowVolpertGraph.";
 ShowVolpertGraph::funcarg = "Argument `1` is not a valid graph plot function. Try Graph, \
@@ -1848,7 +1846,7 @@ GraphPlot, GraphPlot3D, LayeredGraphPlot or TreePlot.";
 ShowVolpertGraph[{reactions__},opts___?OptionQ] := 
 	Module[{
 			fullopts, graphfunc, exps, vgp, vindices, vtempind, 
-			vg, vind, complx, numbd, ind, initsp, highlight, edgelabels,
+			vg, vind, complx, numbd, ind, initsp, highlighted, edgelabels,
 			nopts, g, bipd, fhj, sp, m, r
 		   },
 
@@ -1862,7 +1860,7 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 			
 			If[ vgp === $Failed, Return[$Failed];, {vg, vind} = vgp;];
 
-			highlight = Flatten[{Highlight /. FilterRules[fullopts, Highlight]}]; (*ToCanonicalForm*)
+			highlighted = Flatten[{Highlighted /. FilterRules[fullopts, Highlighted]}]; (*ToCanonicalForm*)
 
 			ind = Indexed /. FilterRules[fullopts, Indexed];
 			sp = ReactionsData[{reactions},exps]["species"];
@@ -1880,26 +1878,26 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 				vg = vg /. First[vindices] /. (Reverse /@ vtempind);
 				*)
 				vtempind = vind /. Rule[x_,y_] :> Rule[x,Subscript[xyz,y]];
-				highlight = highlight /. x_RightArrow :> {x /. vtempind, Last[x /. Last[vindices]]};
-				highlight = highlight /. First[vindices] /. (Reverse /@ vtempind);
+				highlighted = highlighted /. x_RightArrow :> {x /. vtempind, Last[x /. Last[vindices]]};
+				highlighted = highlighted /. First[vindices] /. (Reverse /@ vtempind);
 				(*If[Head[#]===RightArrow, {#, # /. Last[vindices]}, {#, # /. First[vindices]}] &/@ highlight;*)
 			];
 
 			numbd = (Numbered /. FilterRules[fullopts, Numbered]) === True; 
 			If[ numbd, 
 					vg = vg /. vind; 
-					highlight = highlight /. vind;
+					highlighted = highlighted /. vind;
 			];
 
 			edgelabels = (EdgeLabels /. FilterRules[fullopts, EdgeLabels]) === True;
 
-			If[ highlight =!= {},
+			If[ highlighted =!= {},
 				
 				If[ edgelabels, vg = Labeled@@# &/@ vg;, vg = First /@ vg; ];
 				(*ez itt erzeketlen a plotfunction-ra es a bipartite-re*)
 				g = Graph[vg];
-				If[ (SubgraphHighlight /. FilterRules[fullopts,SubgraphHighlight]) === True, highlight = Subgraph[g,highlight];]; 
-				HighlightGraph[g, highlight, FilterRules[{opts},Options[HighlightGraph]]],
+				highlighted = Subgraph[g,highlighted];
+				HighlightGraph[g, highlighted, FilterRules[{opts},Options[HighlightGraph]]],
 				
 				nopts = FilterRules[{opts},Options[ToExpression[graphfunc]]];		
 				Switch[graphfunc,
@@ -1908,7 +1906,7 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 							(*ez meg itt erzeketlen a bipartite-re*)
 							Graph[vg, nopts],
 						_, 
-							bipd = (Bipartite /. FilterRules[fullopts, Bipartite]) === True;
+							bipd = (GraphLayout /. FilterRules[fullopts, GraphLayout]) === "Bipartite";
 							nopts = Join[(FilterRules[nopts, EdgeLabeling] /. {}->{EdgeLabeling->False}), nopts];
 							If[ edgelabels, nopts = Join[{EdgeLabeling -> True}, nopts]; ];
 							If[ bipd,
