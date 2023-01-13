@@ -1,6 +1,6 @@
 (* ::Package:: *)
 
-MyTotal[x_] := 
+MyTotal[x_] :=
 	Module[{ pos },
 
 		Total[
@@ -17,7 +17,7 @@ MyTotal[x_] :=
 
 EqualDependentQ := StringCount[#,"="] === 1&;
 
-SS[x_] := 
+SS[x_] :=
 	Module[{ r, read },
 		read = (If[
 					MemberQ[
@@ -32,7 +32,7 @@ SS[x_] :=
 					    Sequence@@r
 				]) &/@ x;
 
-				read /. {xx___,Longest[yy__?StringQ],Longest[zz__?NumberQ],uu___} :> 
+				read /. {xx___,Longest[yy__?StringQ],Longest[zz__?NumberQ],uu___} :>
 					{
 						StringSplit[
 							StringReplace[
@@ -47,7 +47,7 @@ SS[x_] :=
 
 (* MEMO IMPORT FUNCTIONS *)
 
-MyMemoImport[filename_] := MyMemoImport[filename] = 
+MyMemoImport[filename_] := MyMemoImport[filename] =
 		Check[Import[filename,"Text"], Return[$Failed];, {Import::nffil,Import::chtype}];
 
 
@@ -60,15 +60,15 @@ MyImport[filename_, data_] := MyImport[filename, data] =
 
 		m = StringReplace[m,"!"~~Shortest[___]~~"\n"->"\n"]; (*szemet-kommentek kitorolve*)
 
-		If[ StringCases[m, "ELEMENTS"] =!= {}, x = "ELEMENTS"; , 
+		If[ StringCases[m, "ELEMENTS"] =!= {}, x = "ELEMENTS"; ,
 				If[StringCases[m, "ELEMS"] =!= {}, x = "ELEMS";, x = ""; ]];
 
 		If[ StringCases[m, "SPECIES"] =!= {}, y = "SPECIES"; , y = ""; ];
 
 		If[ StringCases[m, "REACTIONS"] =!= {}, z = "REACTIONS"; , z = ""; ];
 
-		If[ z === "", 
-				Message[CHEMKINImport::misdat,"REACTIONS"];		
+		If[ z === "",
+				Message[CHEMKINImport::misdat,"REACTIONS"];
 				Return[{}],
 
 				arr = Cases[
@@ -89,35 +89,35 @@ MyImport[filename_, data_] := MyImport[filename, data] =
 								"chemkinarrhenius" | "chemkinreactions",
 									If[data === "chemkinarrhenius", {#[[1,1]], #[[2]]}& /@ arr, DeleteDuplicates[Flatten[First /@ arr]]]
 								],
-				
-			{True, False},  
+
+			{True, False},
 							Switch[data,
 								"chemkinelements", Flatten[StringSplit[StringCases[m, x~~Shortest[a___]~~"END":>a], {Whitespace,"\n"}]],
 
 								"chemkinarrhenius" | "chemkinreactions",
 									If[data === "chemkinarrhenius", {#[[1,1]], #[[2]]}& /@ arr, DeleteDuplicates[Flatten[First /@ arr]]],
 								_,
-									Message[CHEMKINImport::misdat,"SPECIES"];  
+									Message[CHEMKINImport::misdat,"SPECIES"];
 									Return[{}]
 							],
 
-			{False, True},   
+			{False, True},
 							Switch[data,
 								"chemkinspecies", Flatten[StringSplit[StringCases[m, y~~Shortest[a___]~~"END":>a], {Whitespace,"\n"}]],
 
 								"chemkinarrhenius" | "chemkinreactions",
 									If[data === "chemkinarrhenius", {#[[1,1]], #[[2]]}& /@ arr, DeleteDuplicates[Flatten[First /@ arr]]],
-								_, 
-									Message[CHEMKINImport::misdat,"ELEMENTS"]; 
+								_,
+									Message[CHEMKINImport::misdat,"ELEMENTS"];
 									Return[{}]
 							],
 
-			{False, False}, 
+			{False, False},
 							Switch[data,
 								"chemkinarrhenius" | "chemkinreactions",
 									If[data === "chemkinarrhenius", {#[[1,1]], #[[2]]}& /@ arr, DeleteDuplicates[Flatten[First /@ arr]]],
 								_,
-									Message[CHEMKINImport::misdat,"ELEMENTS"];  
+									Message[CHEMKINImport::misdat,"ELEMENTS"];
 									Message[CHEMKINImport::misdat,"SPECIES"];
 									Return[{}]
 							]
@@ -125,7 +125,7 @@ MyImport[filename_, data_] := MyImport[filename, data] =
 	];
 
 
-PropertiesCHEMKINImport = 
+PropertiesCHEMKINImport =
 	{
 		"chemkinelements","chemkinspecies","chemkinreactions","chemkinarrhenius"
 	};
@@ -139,7 +139,7 @@ CHEMKINImport::usage = "CHEMKINImport[file] imports all the relevant data from a
 
 CHEMKINImport::illarg = "The argument of CHEMKINImport needs a string with a file name the extension of which is .dat or .inp.";
 CHEMKINImport::badname = "At least one of the arguments '`1`' is a non-identified property. Try CHEMKINImport[\"Properties\"].";
-CHEMKINImport::bimp = "Some problem occurred in the import procedure. For possible further issues, see the function Import."; 
+CHEMKINImport::bimp = "Some problem occurred in the import procedure. For possible further issues, see the function Import.";
 CHEMKINImport::misdat = "Missing DATA: the CHEMKIN file to be imported does not contain data for '`1`'.";
 CHEMKINImport::badarg = "Illegal argument of function CHEMKINImport.";
 
@@ -148,7 +148,7 @@ CHEMKINImport::badarg = "Illegal argument of function CHEMKINImport.";
 CHEMKINImport[filename_?StringQ]["Properties"] := PropertiesCHEMKINImport;
 CHEMKINImport[filename_?StringQ][] := Thread[PropertiesCHEMKINImport->CHEMKINImport[filename]["All"]];
 CHEMKINImport[filename_?StringQ]["All"] := CHEMKINImport[filename][PropertiesCHEMKINImport];
-CHEMKINImport[filename_?StringQ][data__?StringQ] := 
+CHEMKINImport[filename_?StringQ][data__?StringQ] :=
 	(
 	If[ Last[StringSplit[StringTrim[filename],"."]] =!= "dat" && Last[StringSplit[StringTrim[filename],"."]] =!= "inp",
 		Message[CHEMKINImport::"illarg"];
@@ -164,19 +164,19 @@ CHEMKINImport[filename_?StringQ][data__?StringQ] :=
 	(*]*)
 	);
 
-CHEMKINImport[filename_?StringQ][data__] := 
+CHEMKINImport[filename_?StringQ][data__] :=
 	CHEMKINImport[filename][Sequence @@ (ToString /@ Flatten[{data}])];
 
 (*CHEMKINImport[files__?StringQ] := CHEMKINImport /@ Flatten[{files}];*)
 
-Format[CHEMKINImport[filename_?StringQ]] := 
+Format[CHEMKINImport[filename_?StringQ]] :=
 	DynamicModule[{x, chi},
 					x = Dynamic[Refresh[Round[Clock[Infinity]],UpdateInterval->1]];
 					Monitor[chi = CHEMKINImport[filename][];,
 									Column[{Row[{"CHEMKINImport is now importing and calculating ",Dynamic[Mod[First[x],5]/.{0->"",1->".",2->"..",3->"...",4->"...."}]}],
 											ProgressIndicator[Dynamic[Clock[Infinity]],Indeterminate,ImageMargins->1,BaselinePosition->Center],
 											Row[{x,". ","seconds passed"}]
-									}]	
+									}]
 					];
 					FinishDynamic[];
 					chi(*FormatString[{reactions},{externals}]*)
@@ -193,20 +193,20 @@ CHEMKINExport::fexist = "The given file already exists and will be overwritten."
 CHEMKINExport::wrgformat = "The given list of reactions has wrong format.";
 CHEMKINExport::badarg = "Illegal argument of function CHEMKINExport.";
 
-CHEMKINExport[filename_?StringQ, reactions_List] := 
+CHEMKINExport[filename_?StringQ, reactions_List] :=
 	Module[{filestr, path, i, r, mmax, str, n, sq, step, rstep, arrh, w, nform, narrh, b = 0},
-		
-		If[ Last[StringSplit[StringTrim[filename],"."]] =!= "dat", 
+
+		If[ Last[StringSplit[StringTrim[filename],"."]] =!= "dat",
 			Message[CHEMKINExport::"illarg"];
 			Return[$Failed];
 		];
 
-		If[FileNameDepth[filename] <= 1 || StringMatchQ[filename, "*:/*"], 
+		If[FileNameDepth[filename] <= 1 || StringMatchQ[filename, "*:/*"],
 			path = filename;, path = FileNameJoin[{Directory[],filename}];
 		];
 
 		If[FileExistsQ[path], Message[CHEMKINExport::"fexist"]; ]; (*Do you want to delete or rename DeleteFile[path]*)
-		
+
 		filestr = Check[OpenWrite[path], Return[$Failed];, {General::"aofil", OpenWrite::"noopen"}];
 
 		If[ filestr === $Failed, Return[$Failed]; ];
@@ -215,7 +215,7 @@ CHEMKINExport[filename_?StringQ, reactions_List] :=
 		mmax = Max[StringLength[StringReplace[ToString[#]," "->""]]& /@ Flatten[{reactions}]];
 
 		Do[
-			step = reactions[[i]];			
+			step = reactions[[i]];
 			rstep = {};
 
 			If[VectorQ[{step}],
@@ -229,7 +229,7 @@ CHEMKINExport[filename_?StringQ, reactions_List] :=
 					arrh = Last[step];
 				];
 			];
-	
+
 			If[rstep === {},
 				Message[CHEMKINExport::wrgformat];
 				Return[$Failed];
@@ -256,10 +256,10 @@ CHEMKINExport[filename_?StringQ, reactions_List] :=
 						sq = MapIndexed[{#1, First[#2]}&, StringQ /@ arrh];
 						str = StringToStream[""];
 						n = Map[
-							If[First[#], 
-									Close[str]; 
-									str = StringToStream[arrh[[Last[#]]]]; 
-									N[Read[str, Number]], 
+							If[First[#],
+									Close[str];
+									str = StringToStream[arrh[[Last[#]]]];
+									N[Read[str, Number]],
 									N[arrh[[Last[#]]]]
 							]&, sq
 						];
@@ -277,21 +277,21 @@ CHEMKINExport[filename_?StringQ, reactions_List] :=
 						WriteString[filestr, ToString[i]<>"\n"];
 						WriteString[filestr,
 							StringReplace[w, {" ":>"","->"->"=>","\[RightArrow]"->"=>","\[LongRightArrow]"->"=>","\[Equilibrium]":>"<=>","\[ReverseEquilibrium]":>"<=>","\[LeftRightArrow]":>"<=>","\[LongLeftRightArrow]":>"<=>"}]<>
-												StringJoin[ConstantArray[" ", Max[mmax+10-StringLength[w],2]]]<>narrh<>"\n"]; 
+												StringJoin[ConstantArray[" ", Max[mmax+10-StringLength[w],2]]]<>narrh<>"\n"];
 						(*StringJoin[ToString /@ nform]*)
 						b = i;(*,
 
 						Message[CHEMKINExport::wrgformat];
 						Return[$Failed];
 					];*)
-					
+
 			];,
 			{i, 1, r}
 		];
 
 		Close[filestr];
 
-		If[ b === r, 
+		If[ b === r,
 			Print["All given data have been written successfully in the file(path): " <> filename];,
 			Return[$Failed];
 		];

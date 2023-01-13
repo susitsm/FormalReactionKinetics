@@ -252,7 +252,7 @@ See GetReaction[\"Models\"] or Models.";
 SyntaxInformation[GetReaction]={"ArgumentsPattern"->{__}};
 
 GetReaction["Models"] := ModelsSumPrivate; (*Models*)
-GetReaction[x_?StringQ] := 
+GetReaction[x_?StringQ] :=
 	If[{Print["asdf"],
 		KeyExistsQ[ReactionsSumPrivate,x]}[[2]], (*Models*)
 		    ReactionsSumPrivate[x],
