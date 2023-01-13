@@ -272,11 +272,11 @@ Get[FindFile["ReactionKineticsModels.wl"]]
 Get[FindFile["CHEMKIN.wl"]]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*stoichiometry*)
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*ReactionsData*)
 
 
@@ -378,7 +378,7 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 			If[(m = Cases[reacs,_String])=!={},
 
 				builtin = Check[(#->GetReaction[#])& /@ m, Return[$Failed];, GetReaction::"nvmod"];(**)
-				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], externals]
+				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], externals],
 
 				allExternals = DeleteDuplicates[Prepend[AllExternals[{externals}],"0"]/.(0->"0")]; (*internalspecies megadas*)
 				exsrule = Thread[allExternals -> 0];
