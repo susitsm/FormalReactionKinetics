@@ -281,8 +281,6 @@ Get[FindFile["CHEMKIN.wl"]]
 
 
 SpeciesQ := UpperCaseQ[StringTake[ToString[#],1]]&;
-ExternalsQ := OptionQ[{#}]&&Union[First/@Flatten[{#}]]==={ExternalSpecies}&;
-NotExternalsQ := Not[ExternalsQ[#]]&;
 AllExternals := Flatten[#/.Rule->List/.ExternalSpecies->Sequence[]]&;
 
 
@@ -368,7 +366,7 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 	Module[
 			{ reacs,
 			  m, builtin, exs, exsrule, 
-			  steps, steprarrow, steprule, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, sp, 
+			  reactionsteps, steprarrow, steprule, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, sp, 
 			  indexed, a, b, e, nloc, lloc, sloc,
 			  lsp, lrs, alpha, beta, gamma, fhjweakvertices, fhjweakcomponents, 
 			  fhjstrongvertices, fhjstrongcomponents,
@@ -390,9 +388,9 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 				(**)
 				(* MAIN *)
 
-				steps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
+				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
 
-				steprarrow = DeleteDuplicates[steps /. exsrule /. (0->"0")];
+				steprarrow = DeleteDuplicates[reactionsteps /. exsrule /. (0->"0")];
 
 				steprule = steprarrow /. RightArrow -> Rule;
 
@@ -428,34 +426,7 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 				fhjweakcomponents = subgraphedges[fhjgraph, fhjweakvertices];
 
 				fhjstrongvertices = ConnectedComponents[fhjgraph];
-				fhjstrongcomponents = subgraphedges[fhjgraph, fhjstrongvertices];
-
-(*				volpertgraph = Graph[First /@ vgraph];
-				volpertbasis = Flatten[Map[If[
-											VertexInDegree[volpertgraph,#]===0, 
-											#, {}
-										    ]&, 
-											Append[sp,"0"]
-									      ] /. "0" :> {}
-							         ];
-*)
-(*				fhjstronglength = Length[fhjstrongvertices];
-				fhjstronggraph = Graph[
-									DeleteDuplicates[
-										steprarrow /. 
-											Sort[Flatten[MapThread[Thread[#1 -> #2]&, {fhjstrongvertices, Range[fhjstronglength]}]], 
-													Length[First[#1]]>Length[First[#2]]&
-												]
-									] /. (RightArrow[y_,y_] :> RightArrow[y,"\[Infinity]"]) /. RightArrow -> Rule];
-				(*Print[fhjstronggraph];*)
-				volpertbasis = Map[If[
-									VertexInDegree[fhjstronggraph,#]===0, 
-									Append[fhjstrongcomponents[[#]],Flatten[(First /@ complextocoefflist[#])& /@ fhjstrongcomponents[[#,2]]]], {{}}
-									]&,
-									(VertexList[fhjstronggraph] /. "\[Infinity]":>Sequence[])
-								] /. {{}} :> Sequence[];
-*)		
-
+				fhjstrongcomponents = subgraphedges[fhjgraph, fhjstrongvertices];		
 				fhjterminalstrongvertices = Map[
 												Complement[
 													Union @@ Map[Cases[steprarrow, RightArrow[#,y_]:>y]&, #], #
@@ -466,54 +437,31 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 				Dispatch[{
 
 					"species" -> sp,
-
 					"M" -> lsp,
-
 					"externalspecies" -> (e = exs /. "0" -> Sequence[]),
 					(*e = If[MemberQ[complexes,"0"], exs, Rest[exs]]*)
-
 					"E" -> Length[e],
-
-					"reactionsteps" -> steps, (*steprule*)
-
+					"reactionsteps" -> reactionsteps, (*steprule*)
 					"R" -> lrs,
-
 					"complexes" -> complexes,
-
 					"fhjgraphedges" -> steprule, 
 					(*FromOrderedPairs[steprule /. Rule[c1_,c2_] :> {Position[complexes, c1][[1, 1]], Position[complexes, c2][[1, 1]]}]*)
-
 					"fhjweaklyconnectedcomponents" -> fhjweakcomponents,
 					(*(fhjweak = WeakComponents[steprule])*)
-
 					"fhjstronglyconnectedcomponents" -> fhjstrongcomponents,
 					(*(fhjstrong = StrongComponents[steprule])*)
-
 					"fhjterminalstronglyconnectedcomponents" -> fhjterminalstrongcomponents,
-
-					(*"volpertbasis" -> {},*)
-
 					"N" -> (nloc = Length[complexes]),
-
 					"L" -> (lloc = Length[fhjweakvertices]),
-
 					"S" -> (sloc = MatrixRank[gamma]),
 					(*MatrixRank[gamma = First[Differences[ab = (Normal/@{a,b})]]]*)
-
 					"deficiency" -> "\[Delta]=N-L-S="<>ToString[nloc]<>"-"<>ToString[lloc]<>"-"<>ToString[sloc]<>"="<>ToString[nloc-lloc-sloc],
-
 					"\[Alpha]" -> alpha,
-
 					"\[Beta]" -> beta,
-
 					"\[Gamma]" -> gamma,
-
 					"reactionsteporders" -> (Total /@ Transpose[alpha]),
-
 					"variables" -> (Subscript[Global`c, #] & /@ sp),
-
 					"volpertgraph" -> {vggraphwzerocomplex, Drop[indexed, lsp]}
-
 				}]
 			]
 	];
@@ -549,18 +497,16 @@ ReactionsData::wrreac = "Argument `1` may not be in a correct form. Check OpenRe
 SyntaxInformation[ReactionsData]={"ArgumentsPattern"->{__,OptionsPattern[]}};
 Options[ReactionsData] = {ExternalSpecies->{}};
 ReactionsData["Properties"] := PropertiesReactionsData;
-ReactionsData[{},externals:(_?VectorQ|OptionsPattern[])][] := {};
-ReactionsData[{reactions__},externals:(_?VectorQ|OptionsPattern[])][] := 
+ReactionsData[{},OptionsPattern[]][] := {};
+ReactionsData[{reactions__},OptionsPattern[]][] := 
 	Check[Rdata[{reactions},{externals}],
 					Message[ReactionsData::"wrreac",ReactionsForm[{reactions}]];
 					Return[$Failed]
 	];
 ReactionsData[{},externals:(_?VectorQ|OptionsPattern[])]["Properties"] := PropertiesReactionsData;
 ReactionsData[{reactions__},externals:(_?VectorQ|OptionsPattern[])]["Properties"] := PropertiesReactionsData;
-(*ReactionsData[Longest[reactions__?NotExternalsQ],Shortest[externals:(___?ExternalsQ)]]["Properties"] := PropertiesReactionsData;*)
 ReactionsData[{},externals:(_?VectorQ|OptionsPattern[])]["All"] := {};
 ReactionsData[{reactions__},externals:(_?VectorQ|OptionsPattern[])]["All"] := ReactionsData[{reactions},externals][PropertiesReactionsData];
-(*ReactionsData[Longest[reactions__?NotExternalsQ],Shortest[externals:(___?ExternalsQ)]]["All"] := ReactionsData[{reactions},externals][PropertiesReactionsData];*)
 ReactionsData[{},externals:(_?VectorQ|OptionsPattern[])][data__?StringQ] := 
 	(
 	If[Nand @@ Map[MemberQ[PropertiesReactionsData,#]&,{data}],
