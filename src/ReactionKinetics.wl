@@ -272,11 +272,11 @@ Get[FindFile["ReactionKineticsModels.wl"]]
 Get[FindFile["CHEMKIN.wl"]]
 
 
-(* ::Subsection::Closed:: *)
+(* ::Subsection:: *)
 (*stoichiometry*)
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*ReactionsData*)
 
 
@@ -365,8 +365,8 @@ subgraphedges[graph_,vtceslist_] :=
 Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 	Module[
 			{ reacs,
-			  m, builtin, exs, exsrule,
-			  reactionsteps, steprarrow, steprule, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, sp,
+			  m, builtin, allExternals, exsrule,
+			  reactionsteps, internalReactionSteps, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, sp,
 			  indexed, a, b, e, nloc, lloc, sloc,
 			  lsp, lrs, alpha, beta, gamma, fhjweakvertices, fhjweakcomponents,
 			  fhjstrongvertices, fhjstrongcomponents,
@@ -378,38 +378,26 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 			If[(m = Cases[reacs,_String])=!={},
 
 				builtin = Check[(#->GetReaction[#])& /@ m, Return[$Failed];, GetReaction::"nvmod"];(**)
-
 				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], externals]
-				(*DeleteDuplicates*),
 
-				exs = DeleteDuplicates[Prepend[AllExternals[{externals}],"0"]/.(0->"0")]; (*internalspecies megadas*)
-
-				exsrule = Thread[exs -> 0];
-				(**)
-				(* MAIN *)
+				allExternals = DeleteDuplicates[Prepend[AllExternals[{externals}],"0"]/.(0->"0")]; (*internalspecies megadas*)
+				exsrule = Thread[allExternals -> 0];
 
 				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
+				internalReactionSteps = DeleteDuplicates[reactionsteps /. exsrule /. (0->"0")];
 
-				steprarrow = DeleteDuplicates[reactionsteps /. exsrule /. (0->"0")];
+				fhjgraph = Graph[internalReactionSteps];
 
-				steprule = steprarrow /. RightArrow -> Rule;
+				complexes = DeleteDuplicates[Flatten[internalReactionSteps /. RightArrow -> List]]; (*Sort*)
 
-				(*Print[steprule];*)
-				fhjgraph = Graph[steprule];
-
-				complexes = DeleteDuplicates[Flatten[steprarrow /. RightArrow -> List]]; (*Sort*)
-				(*VertexList[fhjgraph];*)
-
-				vgggraph = Flatten[(Thread /@ {#->complextocoefflist[Last[#]], complextocoefflist[First[#]]->#}) &/@ steprarrow];
+				vgggraph = Flatten[(Thread /@ {#->complextocoefflist[Last[#]], complextocoefflist[First[#]]->#}) &/@ internalReactionSteps];
 				vgraph = vgggraph /. Rule[A_RightArrow,B_]:>{Rule[A, First[B]], Last[B]} /. Rule[A_,B_RightArrow]:>{Rule[First[A], B], Last[A]};
-				(*Print[vgraph];*)
 
-				sp = complextospecies[complexes] /. "0" -> Sequence[]; (*komplexek csak belso anyagfajta erejeig egyertelmuek*)
+				species = complextospecies[complexes] /. "0" -> Sequence[]; (*komplexek csak belso anyagfajta erejeig egyertelmuek*)
 
-				indexed = Flatten[MapIndexed[#1->First[#2]&, #]& /@ {sp, steprarrow}];
-				(*Print[indexed];*)
+				indexed = Flatten[MapIndexed[#1->First[#2]&, #]& /@ {species, internalReactionSteps}];
 
-				{lsp, lrs} = Length /@ {sp, steprule};
+				{lsp, lrs} = Length /@ {species, internalReactionSteps};
 
 				vggraphwzerocomplex = vgraph /. {Rule["0",y_RightArrow],z_} :> Sequence[] /. {Rule[x_RightArrow,"0"],z_} :> Sequence[];
 
@@ -420,7 +408,6 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 				beta = SparseArray[b, {lsp, lrs}];
 				gamma = beta-alpha;
 				(*SparseArray[Join[a,b] //. {x___,Rule[{y_,z_},k_],u___,Rule[{y_,z_},l_],v___}:>{x,Rule[{y,z},k+l],u,v}, {lsp,lrs}];*)
-				(*Print[gamma];*)
 
 				fhjweakvertices = ConnectedComponents[UndirectedGraph[fhjgraph]];
 				fhjweakcomponents = subgraphedges[fhjgraph, fhjweakvertices];
@@ -429,27 +416,23 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 				fhjstrongcomponents = subgraphedges[fhjgraph, fhjstrongvertices];
 				fhjterminalstrongvertices = Map[
 												Complement[
-													Union @@ Map[Cases[steprarrow, RightArrow[#,y_]:>y]&, #], #
+													Union @@ Map[Cases[internalReactionSteps, RightArrow[#,y_]:>y]&, #], #
 												]==={} /. True-># /. False->Sequence[]&, fhjstrongvertices
 											];
 				fhjterminalstrongcomponents = subgraphedges[fhjgraph, fhjterminalstrongvertices];
 
 				Dispatch[{
-
-					"species" -> sp,
+					"species" -> species,
 					"M" -> lsp,
-					"externalspecies" -> (e = exs /. "0" -> Sequence[]),
-					(*e = If[MemberQ[complexes,"0"], exs, Rest[exs]]*)
+					"externalspecies" -> (e = allExternals /. "0" -> Sequence[]),
+					(*e = If[MemberQ[complexes,"0"], allExternals, Rest[allExternals]]*)
 					"E" -> Length[e],
 					"reactionsteps" -> reactionsteps, (*steprule*)
 					"R" -> lrs,
 					"complexes" -> complexes,
-					"fhjgraphedges" -> steprule,
-					(*FromOrderedPairs[steprule /. Rule[c1_,c2_] :> {Position[complexes, c1][[1, 1]], Position[complexes, c2][[1, 1]]}]*)
+					"fhjgraphedges" -> internalReactionSteps /. RightArrow -> Rule,
 					"fhjweaklyconnectedcomponents" -> fhjweakcomponents,
-					(*(fhjweak = WeakComponents[steprule])*)
 					"fhjstronglyconnectedcomponents" -> fhjstrongcomponents,
-					(*(fhjstrong = StrongComponents[steprule])*)
 					"fhjterminalstronglyconnectedcomponents" -> fhjterminalstrongcomponents,
 					"N" -> (nloc = Length[complexes]),
 					"L" -> (lloc = Length[fhjweakvertices]),
@@ -460,7 +443,7 @@ Rdata[{reactions__},externals__] := Rdata[{reactions},externals] =
 					"\[Beta]" -> beta,
 					"\[Gamma]" -> gamma,
 					"reactionsteporders" -> (Total /@ Transpose[alpha]),
-					"variables" -> (Subscript[Global`c, #] & /@ sp),
+					"variables" -> (Subscript[Global`c, #] & /@ species),
 					"volpertgraph" -> {vggraphwzerocomplex, Drop[indexed, lsp]}
 				}]
 			]
