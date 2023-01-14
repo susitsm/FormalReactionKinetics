@@ -25,7 +25,6 @@ ToCanonicalForm[___] := (Message[ToCanonicalForm::"badarg"]; $Failed)
 
 
 SpeciesQ := UpperCaseQ[StringTake[ToString[#],1]]&;
-AllExternals := Flatten[#/.Rule->List/.ExternalSpecies->Sequence[]]&;
 
 
 SymbolQ := Head[#]===Symbol&;
@@ -124,7 +123,7 @@ Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
 				builtin = Check[(#->GetReaction[#])& /@ m, Return[$Failed];, GetReaction::"nvmod"];(**)
 				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], externals],
 
-				allExternals = DeleteDuplicates[Prepend[AllExternals[{externals}],"0"]/.(0->"0")]; (*internalspecies megadas*)
+				allExternals = DeleteDuplicates[Prepend[{externals},"0"]/.(0->"0")]; (*internalspecies megadas*)
 				exsrule = Thread[allExternals -> 0];
 
 				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
@@ -305,11 +304,11 @@ graph making all its edges reversible.";
 ReversibleFHJRepresentation::badarg = "Illegal argument of function ReversibleFHJRepresentation.";
 
 
-Options[ReversibleFHJRepresentation] = {ExternalSpecies->{}};
+Options[ReversibleFHJRepresentation] = Options[ReactionsData];
 SyntaxInformation[ReversibleFHJRepresentation]={"ArgumentsPattern"->{__,OptionsPattern[]}};
-ReversibleFHJRepresentation[{reactions__},externals:(_?VectorQ|OptionsPattern[])] :=
+ReversibleFHJRepresentation[{reactions__},opts:OptionsPattern[]] :=
 	ReplaceRepeated[
-		Check[ReactionsData[{reactions},externals]["fhjgraphedges"],Abort[];,{ReactionsData::wrreac,ReactionsData::badarg}],
+		Check[ReactionsData[{reactions},opts]["fhjgraphedges"],Abort[];,{ReactionsData::wrreac,ReactionsData::badarg}],
 		{x___, Rule[y_,z_], t___, Rule[z_,y_], u___} :> {x, Equilibrium[y,z], t, u}
 	];
 
@@ -322,9 +321,9 @@ ReversibleQ::badarg = "Illegal argument of function ReversibleQ.";
 
 
 SyntaxInformation[ReversibleQ]={"ArgumentsPattern"->{__}};
-Options[ReversibleQ] = {ExternalSpecies->{}};
-ReversibleQ[{reactions__},externals:(_?VectorQ|OptionsPattern[])] :=
-		FreeQ[ReversibleFHJRepresentation[{reactions},externals],_Rule];
+Options[ReversibleQ] = Options[ReversibleFHJRepresentation];
+ReversibleQ[{reactions__},opts:OptionsPattern[]] :=
+		FreeQ[ReversibleFHJRepresentation[{reactions},opts],_Rule];
 ReversibleQ[___] := (Message[ReversibleQ::"badarg"]; $Failed)
 
 
@@ -333,9 +332,9 @@ WeaklyReversibleQ::badarg = "Illegal argument of function WeaklyReversibleQ.";
 
 
 SyntaxInformation[WeaklyReversibleQ]={"ArgumentsPattern"->{__}};
-Options[WeaklyReversibleQ] = {ExternalSpecies->{}};
-WeaklyReversibleQ[{reactions__},externals:(_?VectorQ|OptionsPattern[])] :=
-		(Length[Check[ReactionsData[{reactions},externals]["fhjstronglyconnectedcomponents"],Abort[];,{ReactionsData::wrreac,ReactionsData::badarg}]] === 1);
+Options[WeaklyReversibleQ] = Options[ReactionsData];
+WeaklyReversibleQ[{reactions__},opts:OptionsPattern[]] :=
+		(Length[Check[ReactionsData[{reactions},opts]["fhjstronglyconnectedcomponents"],Abort[];,{ReactionsData::wrreac,ReactionsData::badarg}]] === 1);
 WeaklyReversibleQ[___] := (Message[WeaklyReversibleQ::"badarg"]; $Failed)
 
 
@@ -420,13 +419,13 @@ DeleteAutocatalysis::dimmx = "Matrixes \[Alpha] and \[Beta] must have the same s
 DeleteAutocatalysis::vars = "The number of species does not match with the dimensions of \[Alpha] and \[Beta].";
 DeleteAutocatalysis::badarg = "Illegal argument of function DeleteAutocatalysis.";
 
-Options[DeleteAutocatalysis] := {ExternalSpecies->{}};
+Options[DeleteAutocatalysis] := Options[ReactionsData];
 
-DeleteAutocatalysis[{reactions__}, OptionsPattern[]] :=
-	DeleteAutocatalysis @@ Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Beta]","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+DeleteAutocatalysis[{reactions__}, opts:OptionsPattern[]] :=
+	DeleteAutocatalysis @@ Check[ReactionsData[{reactions},opts]["\[Alpha]","\[Beta]","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
-DeleteAutocatalysis[{reactions__}, variables_?VectorQ, OptionsPattern[]] :=
-	DeleteAutocatalysis[Sequence @@ Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Beta]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],variables];
+DeleteAutocatalysis[{reactions__}, variables_?VectorQ, opts:OptionsPattern[]] :=
+	DeleteAutocatalysis[Sequence @@ Check[ReactionsData[{reactions},opts]["\[Alpha]","\[Beta]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],variables];
 
 DeleteAutocatalysis[alpha_?MatrixQ,beta_?MatrixQ] :=
 	DeleteAutocatalysis[alpha, beta, Array["X"[#]&,Length[alpha]]];
@@ -463,12 +462,12 @@ DeleteAutocatalysis[___][___] := (Message[DeleteAutocatalysis::"badarg"]; $Faile
 
 MinFHJWeaklyConnectedComponents::usage = "MinFHJWeaklyConnectedComponents[{reactions},options] returns the smallest weakly connected components of the given reaction.";
 
-Options[MinFHJWeaklyConnectedComponents] := {ExternalSpecies->{}};
+Options[MinFHJWeaklyConnectedComponents] := Options[ReactionsData];
 
-MinFHJWeaklyConnectedComponents[{reactions__}, OptionsPattern[]] :=
+MinFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjwcc, lengthvtxes, minvtxes},
 
-		fhjwcc = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjwcc = Check[ReactionsData[{reactions},opts]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjwcc;
 
@@ -484,12 +483,12 @@ MinFHJWeaklyConnectedComponents[___][___] := (Message[MinFHJWeaklyConnectedCompo
 
 MinFHJStronglyConnectedComponents::usage = "MinFHJStronglyConnectedComponents[{reactions},options] returns the smallest strongly connected components of the given reaction.";
 
-Options[MinFHJStronglyConnectedComponents] := {ExternalSpecies->{}};
+Options[MinFHJStronglyConnectedComponents] := Options[ReactionsData];
 
-MinFHJStronglyConnectedComponents[{reactions__}, OptionsPattern[]] :=
+MinFHJStronglyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjscc, lengthvtxes, minvtxes},
 
-		fhjscc = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjscc = Check[ReactionsData[{reactions},opts]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjscc;
 
@@ -505,12 +504,12 @@ MinFHJStronglyConnectedComponents[___][___] := (Message[MinFHJStronglyConnectedC
 
 MaxFHJWeaklyConnectedComponents::usage = "MaxFHJWeaklyConnectedComponents[{reactions},options] returns the largest weakly connected components of the given reaction.";
 
-Options[MaxFHJWeaklyConnectedComponents] := {ExternalSpecies->{}};
+Options[MaxFHJWeaklyConnectedComponents] := Options[ReactionsData];
 
-MaxFHJWeaklyConnectedComponents[{reactions__}, OptionsPattern[]] :=
+MaxFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjwcc, lengthvtxes, maxvtxes},
 
-		fhjwcc = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjwcc = Check[ReactionsData[{reactions},opts]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjwcc;
 
@@ -526,12 +525,12 @@ MaxFHJWeaklyConnectedComponents[___][___] := (Message[MaxFHJWeaklyConnectedCompo
 
 MaxFHJStronglyConnectedComponents::usage = "MaxFHJStronglyConnectedComponents[{reactions},options] returns the largest strongly connected components of the given reaction.";
 
-Options[MaxFHJStronglyConnectedComponents] := {ExternalSpecies->{}};
+Options[MaxFHJStronglyConnectedComponents] := Options[ReactionsData];
 
-MaxFHJStronglyConnectedComponents[{reactions__}, OptionsPattern[]] :=
+MaxFHJStronglyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjscc, lengthvtxes, maxvtxes},
 
-		fhjscc = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjscc = Check[ReactionsData[{reactions},opts]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjscc;
 
@@ -572,9 +571,8 @@ ShowFHJGraph[{reactions__}, rates_List:{}, opts___?OptionQ] :=
 		   },
 
 			cc = FilterRules[{opts},Options[ShowFHJGraph]];
-			externals = FilterRules[{opts},ExternalSpecies];
 
-			rdata = Check[ReactionsData[{reactions},Flatten[externals]]["N","R","fhjgraphedges","complexes","fhjstronglyconnectedcomponents"], Return[$Failed], {ReactionsData::wrreac,ReactionsData::badarg}];
+			rdata = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["N","R","fhjgraphedges","complexes","fhjstronglyconnectedcomponents"], Return[$Failed], {ReactionsData::wrreac,ReactionsData::badarg}];
 			If[rdata === $Failed, Return[$Failed]];
 
 			{n, r, fhj, cxs, fhjscc} = rdata;
@@ -856,10 +854,10 @@ AcyclicVolpertGraphQ::usage = "AcyclicVolpertGraphQ[reactions,options] checks wh
 
 AcyclicVolpertGraphQ::badarg = "Illegal argument of function AcyclicVolpertGraphQ.";
 
-Options[AcyclicVolpertGraphQ] := {ExternalSpecies -> {}};
+Options[AcyclicVolpertGraphQ] := Options[ReactionsData];
 
-AcyclicVolpertGraphQ[{reactions__}, externals:(_?VectorQ|OptionsPattern[])] :=
-	AcyclicGraphQ[Graph[First/@First[Check[ReactionsData[{reactions},externals]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]]]];
+AcyclicVolpertGraphQ[{reactions__}, opts:OptionsPattern[]] :=
+	AcyclicGraphQ[Graph[First/@First[Check[ReactionsData[{reactions},opts]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]]]];
 
 AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
 
@@ -870,6 +868,7 @@ AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
 
 ShowSCLGraph::usage = "Given a reactionData returns the SCL graph of the mechanism. The linkage classes are denoted by \!\(\*SubscriptBox[\(L\), \(i\)]\) where i is theindex of the linkage class in\
  WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
+
 SCLGraph[reactionData_,opts___?OptionQ] :=
  Block[{linkageClasses = WeaklyConnectedGraphComponents[Graph[reactionData["fhjgraphedges"]]],species=reactionData["species"],edges, edgeLabels},
  {edges, edgeLabels} = Flatten[
@@ -887,9 +886,7 @@ ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of th
 
 ShowSCLGraph::badarg = "Illegal argument of function ShowSCLGraph.";
 
-ShowSCLGraph[reactionData_,opts___?OptionQ]:=Block[{g=SCLGraph[reactionData,opts]},
- GraphPlot[g,opts,GraphLayout->"BipartiteEmbedding"]
-]
+ShowSCLGraph[reactionData_,opts___?OptionQ]:= GraphPlot[SCLGraph[reactionData,opts], FilterRules[opts, Options[GraphPlot]], GraphLayout->"BipartiteEmbedding"];
 
 
 (* ::Subsubsection::Closed:: *)
@@ -952,13 +949,13 @@ number of atoms together with the charges is conserved in each reaction step.";
 
 AtomConservingQ::badarg = "Illegal argument of function AtomConservingQ.";
 
-Options[AtomConservingQ]:={ExternalSpecies->{}};
+Options[AtomConservingQ]:=Options[ReactionsData];
 
 SyntaxInformation[AtomConservingQ]={"ArgumentsPattern"->{{__},___}};
 
-AtomConservingQ[{reactions__},externals:(_?VectorQ|OptionsPattern[])] :=
+AtomConservingQ[{reactions__},opts:OptionsPattern[]] :=
 	Module[{species, gamma, atommatrix, nofatch},
-		{species, gamma} = Check[ReactionsData[{reactions},externals]["species","\[Gamma]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{species, gamma} = Check[ReactionsData[{reactions},opts]["species","\[Gamma]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		atommatrix = Last[ToAtomMatrix[species]];
 		nofatch = Length[atommatrix];
@@ -1036,18 +1033,18 @@ DetailedBalanced::rates = "The number of reaction steps does not match with that
 DetailedBalanced::misscirc = "We may have missing circuit condition(s).";
 DetailedBalanced::missspf = "We may have missing spanning forest condition(s).";
 
-Options[DetailedBalanced] := {ExternalSpecies -> {}, GeneratedRateCoefficient -> "k"};
+Options[DetailedBalanced] := Join[Options[ReactionsData, {GeneratedRateCoefficient -> "k"}];
 
 SyntaxInformation[DetailedBalanced]={"ArgumentsPattern"->{{__},___}};
 
 DetailedBalanced[{reactions__}, opts : OptionsPattern[]] :=
 	Block[ { genpar, rr },
 
-		genpar = GeneratedRateCoefficient /. Flatten[{opts, Options[DetailedBalanced]}];
+		genpar = OptionValue[GeneratedRateCoefficient];
 
-		If[ Head[genpar] === Symbol,
+		If[ Head[genpar] === Symbol || Head[genpar] === String,
 
-			rr = Check[ReactionsData[{reactions}, ExternalSpecies /. Flatten[{opts, Options[DetailedBalanced]}]]["R"], Return[$Failed],
+			rr = Check[ReactionsData[{reactions}, FilterRules[opts,Options[ReactionsData]]]["R"], Return[$Failed],
 							{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			(*If[rr === $Failed, Return[$Failed]];*)
@@ -1061,19 +1058,17 @@ DetailedBalanced[{reactions__}, opts : OptionsPattern[]] :=
 	];
 
 DetailedBalanced[{reactions__}, rates_?VectorQ, opts : OptionsPattern[]] :=
-	Module[{ exs, cxes, m, r, nn, ll, fhj, gamma, deficiency, fhjunlist, fhjun, rsteplistind, rrates, shadow, shw,
+	Module[{ cxes, m, r, nn, ll, fhj, gamma, deficiency, fhjunlist, fhjun, rsteplistind, rrates, shadow, shw,
 			 fhjun0, mintree, mintreeun, c0, circs, spanreacs, mm, ccc, circconds, spanforconds, rev
 		   },
 
-			exs = ExternalSpecies /. Flatten[{opts, Options[DetailedBalanced]}];
-
-			If[Not[ReversibleQ[{reactions},exs]],
+			If[Not[ReversibleQ[{reactions},FilterRules[opts, Options[ReversibleQ]]]],
 				Message[DetailedBalanced::"notrev"];
 				Return[$Failed];
 			];
 
 			{cxes, m, r, nn, ll, fhj, gamma, deficiency} =
-					Check[ReactionsData[{reactions},exs]["complexes","M","R","N","L","fhjgraphedges","\[Gamma]","deficiency"], Return[$Failed],
+					Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["complexes","M","R","N","L","fhjgraphedges","\[Gamma]","deficiency"], Return[$Failed],
 						 {ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[Length[rates] =!= r,
