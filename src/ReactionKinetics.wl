@@ -272,7 +272,7 @@ Get[FindFile["ReactionKineticsModels.wl"]]
 Get[FindFile["CHEMKIN.wl"]]
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*stoichiometry*)
 
 
@@ -293,17 +293,17 @@ rratecoeffs as reaction rate coefficients and vars as the names of independent v
 MassActionKinetics::args = "The number of variables or that of reaction rate coefficients do not match with the dimensions of \[Alpha].";
 MassActionKinetics::badarg = "Illegal argument of function MassActionKinetics.";
 
-Options[MassActionKinetics] := {ExternalSpecies->{}};
+Options[MassActionKinetics] := Options[ReactionsData];
 
-MassActionKinetics[{reactions__}, rratecoeffs_?VectorQ, OptionsPattern[]] :=
+MassActionKinetics[{reactions__}, rratecoeffs_?VectorQ, opts:OptionsPattern[]] :=
 	MassActionKinetics[
-			Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],
+			Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],
 			rratecoeffs,
-			Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]];
+			Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]];
 
-MassActionKinetics[{reactions__}, rratecoeffs_?VectorQ, variables_?VectorQ, OptionsPattern[]] :=
+MassActionKinetics[{reactions__}, rratecoeffs_?VectorQ, variables_?VectorQ, opts:OptionsPattern[]] :=
 	MassActionKinetics[
-			Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],
+			Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],
 			rratecoeffs,
 			variables];
 
@@ -327,14 +327,14 @@ MassAction \[Rule] True returns the right-hand side of the induced kinetic diffe
 RightHandSide::args = "The number of variables or that of rates do not match with the dimensions of the \[Alpha] matrix.";
 RightHandSide::badarg = "Illegal argument of function RightHandSide.";
 
-Options[RightHandSide] := {ExternalSpecies->{},MassAction->True};
+Options[RightHandSide] := Join[{MassAction->True}, Options[ReactionsData]];
 
 RightHandSide[{reactions__}, rates_?VectorQ, opts : OptionsPattern[]] :=
-	RightHandSide[{reactions},rates,Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],opts];
+	RightHandSide[{reactions},rates,Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],opts];
 
-RightHandSide[{reactions__}, rates_?VectorQ, vars_?VectorQ, OptionsPattern[]] :=
+RightHandSide[{reactions__}, rates_?VectorQ, vars_?VectorQ, opts:OptionsPattern[]] :=
 	Module[{alpha, gamma, species, nofr, nofs},
-		{alpha, gamma, species, nofr, nofs} = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Gamma]","species","R","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{alpha, gamma, species, nofr, nofs} = Check[ReactionsData[{reactions},FilterRules[opts, ReactionsData]]["\[Alpha]","\[Gamma]","species","R","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		If[Length[vars]===nofs && Length[rates]===nofr,
 			If[OptionValue[MassAction],
 				Dot[gamma, MassActionKinetics[alpha,rates,vars]],
@@ -359,15 +359,15 @@ DeterministicModel::badarg = "Illegal argument of function DeterministicModel.";
 DeterministicModel::args = "The number of rates or that of enthalpiesis are unequal to the number of reaction steps.";
 DeterministicModel::steady = "The given set of steady state concentrations do not match with the number of variables.";
 
-Options[DeterministicModel] := {ExternalSpecies->{}, MassAction->True};
+Options[DeterministicModel] := Join[{MassAction->True},Options[ReactionsData]];
 
 DeterministicModel[{reactions__},s_Symbol:Global`t, opts : OptionsPattern[]] :=
 	DeterministicModel[{reactions},Array[Subscript[Global`k,#]&,
-		Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]],s,opts];
+		Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]],s,opts];
 
 DeterministicModel[{reactions__},rates_?VectorQ,s_Symbol:Global`t, opts : OptionsPattern[]] :=
 	DeterministicModel[{reactions},rates,
-		Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],s,opts];
+		Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],s,opts];
 
 DeterministicModel[{reactions__},rates_?VectorQ,vars_?VectorQ,s_Symbol:Global`t, opts : OptionsPattern[]] :=
 	Module[{v},
@@ -376,11 +376,11 @@ DeterministicModel[{reactions__},rates_?VectorQ,vars_?VectorQ,s_Symbol:Global`t,
 	];
 
 (*Arrhenius reaction rate coefficients*)
-DeterministicModel[{reactions__},arrhenius_?MatrixQ,enthalpies_?VectorQ,C0_?VectorQ,V_,Ta_,tres_,p1_,p2_,s_Symbol:Global`t,OptionsPattern[]] :=
+DeterministicModel[{reactions__},arrhenius_?MatrixQ,enthalpies_?VectorQ,C0_?VectorQ,V_,Ta_,tres_,p1_,p2_,s_Symbol:Global`t,opts:OptionsPattern[]] :=
 	Module[{kkk, maf, alpha, beta, vars, reacs},
-		reacs = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		reacs = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		If[reacs===Length[arrhenius] && reacs===Length[enthalpies],
-			{alpha, beta, vars} = ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Beta]","variables"];
+			{alpha, beta, vars} = ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["\[Alpha]","\[Beta]","variables"];
 			vars = Through[vars[s]];
 			If[Length[C0]===Length[vars],
 				kkk[{a_,n_,e_}] := a Global`T[s]^n Exp[- e /( Global`T[s] MolarGasConstant )];
@@ -410,42 +410,41 @@ Concentrations[{reactions},arrheniuscoeffs,enthalpies,c0,V,Ta,tres,p1,p2,initval
 involving temperature effects. In this case the kinetics is assumed to be of the mass action type, the temperature dependence is allowed to be of the \
 generalized Arrhenius type. The Arrhenius triples are given by arrheniuscoeffs.";
 
-Options[Concentrations] := {ExternalSpecies->{},MassAction->True};
+Options[Concentrations] := Join[Options[DeterministicModel], Options[ReactionsData], Options[DSolve], Options[NDSolve]];
 
 Concentrations::badarg = "Illegal argument of function Concentrations.";
 Concentrations::init = "The initial vector has wrong size.";
 
 (* Solving the ODE symbolically *)
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,s_Symbol:Global`t,opts___?OptionQ] :=
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,s_Symbol:Global`t,opts:OptionsPattern[]] :=
 	Concentrations[{reactions},rates,init,0,s,opts];
 
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VariablesQ,s_Symbol:Global`t,opts___?OptionQ] :=
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VariablesQ,s_Symbol:Global`t,opts:OptionsPattern[]] :=
 	Concentrations[{reactions},rates,init,0,vars,s,opts];
 
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,t0_?NumericQ(*Symbol*),s_Symbol:Global`t,opts___?OptionQ] :=
-	Module[{kineq, vars, exs},
-		exs = Sequence@@FilterRules[{opts},Options[DeterministicModel]];
-		{kineq, vars} = Check[DeterministicModel[{reactions},rates,s,exs],Return[$Failed];,
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,t0_?NumericQ(*Symbol*),s_Symbol:Global`t,opts:OptionsPattern[]] :=
+	Module[{kineq, vars},
+		{kineq, vars} = Check[DeterministicModel[{reactions},rates,s,FilterRules[opts,Options[DeterministicModel]]],Return[$Failed];,
 									{DeterministicModel::badarg,DeterministicModel::args,DeterministicModel::steady,RightHandSide::args,RightHandSide::badarg}];
-		If[Length[init]===ReactionsData[{reactions},exs]["M"],
+		If[Length[init]===ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["M"],
 			{
 				vars,
-				First[DSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, s, FilterRules[{opts},Options[DSolve]]]]
+				First[DSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, s, FilterRules[opts,Options[DSolve]]]]
 			},
 			Message[Concentrations::"init"];
 			$Failed
 		]
 	];
 
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,t0_?NumericQ(*Symbol*),vars_?VectorQ,s_Symbol:Global`t,opts___?OptionQ] :=
-	Module[{kineq, newvars, exs},
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,t0_?NumericQ(*Symbol*),vars_?VectorQ,s_Symbol:Global`t,opts:OptionsPattern[]] :=
+	Module[{kineq, newvars},
 		exs = Sequence@@FilterRules[{opts},Options[DeterministicModel]];
-		{kineq, newvars} = Check[DeterministicModel[{reactions},rates,vars,s,exs],Return[$Failed];,
+		{kineq, newvars} = Check[DeterministicModel[{reactions},rates,vars,s,FilterRules[opts,Options[DeterministicModel]]],Return[$Failed];,
 									{DeterministicModel::badarg,DeterministicModel::args,DeterministicModel::steady,RightHandSide::args,RightHandSide::badarg}];
 		If[Length[init]===ReactionsData[{reactions},exs]["M"],
 			{
 				newvars,
-				First[DSolve[Join[kineq, Thread[(newvars /. s -> t0) == init]], newvars, s, FilterRules[{opts},Options[DSolve]]]]
+				First[DSolve[Join[kineq, Thread[(newvars /. s -> t0) == init]], newvars, s, FilterRules[opts,Options[DSolve]]]]
 			},
 			Message[Concentrations::"init"];
 			$Failed
@@ -453,30 +452,28 @@ Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,t0_?NumericQ(*Symbol*)
 	];
 
 (* Solving the ODE numerically *)
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},s_Symbol:Global`t,opts___?OptionQ] :=
-	Module[{kineq, vars, exs},
-		exs = Sequence@@FilterRules[{opts},Options[DeterministicModel]];
-		{kineq, vars} = Check[DeterministicModel[{reactions},rates,s,exs],Return[$Failed];,
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},s_Symbol:Global`t,opts:OptionsPattern[]] :=
+	Module[{kineq, vars},
+		{kineq, vars} = Check[DeterministicModel[{reactions},rates,s,FilterRules[opts,Options[DeterministicModel]]],Return[$Failed];,
 									{DeterministicModel::badarg,DeterministicModel::args,DeterministicModel::steady,RightHandSide::args,RightHandSide::badarg}];
-		If[Length[init]===ReactionsData[{reactions},exs]["M"],
+		If[Length[init]===ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["M"],
 			{
 				vars,
-				First[NDSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, {s, t0, t1}, FilterRules[{opts},Options[NDSolve]]]]
+				First[NDSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, {s, t0, t1}, FilterRules[opts,Options[NDSolve]]]]
 			},
 			Message[Concentrations::"init"];
 			$Failed
 		]
 	];
 
-Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},vars_?VectorQ,s_Symbol:Global`t,opts___?OptionQ] :=
-	Module[{kineq, newvars, exs},
-		exs = Sequence@@FilterRules[{opts},Options[DeterministicModel]];
-		{kineq, newvars} = Check[DeterministicModel[{reactions},rates,vars,s,exs],Return[$Failed];,
+Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},vars_?VectorQ,s_Symbol:Global`t,opts:OptionsPattern[]] :=
+	Module[{kineq, newvars},
+		{kineq, newvars} = Check[DeterministicModel[{reactions},rates,vars,s,FilterRules[opts,Options[DeterministicModel]]],Return[$Failed];,
 									{DeterministicModel::badarg,DeterministicModel::args,DeterministicModel::steady,RightHandSide::args,RightHandSide::badarg}];
-		If[Length[init]===ReactionsData[{reactions},exs]["M"],
+		If[Length[init]===ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["M"],
 			{
 				newvars,
-				First[NDSolve[Join[kineq, Thread[(newvars /. s -> t0) == init]], newvars, {s, t0, t1}, FilterRules[{opts},Options[NDSolve]]]]
+				First[NDSolve[Join[kineq, Thread[(newvars /. s -> t0) == init]], newvars, {s, t0, t1}, FilterRules[opts,Options[NDSolve]]]]
 			},
 			Message[Concentrations::"init"];
 			$Failed
@@ -484,15 +481,14 @@ Concentrations[{reactions__},rates_?VectorQ,init_?VectorQ,{t0_?NumericQ,t1_?Nume
 	];
 
 (*Arrhenius reaction rate coefficients*)
-Concentrations[{reactions__},arrhenius_?MatrixQ,enthalpies_?VectorQ,C0_?VectorQ,V_,Ta_,tres_,p1_,p2_,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},s_Symbol:Global`t,opts___?OptionQ] :=
-	Module[{kineq, vars, exs},
-		exs = Sequence@@FilterRules[{opts},Options[DeterministicModel]];
-		{kineq, vars} = Check[DeterministicModel[{reactions},arrhenius,enthalpies,C0,V,Ta,tres,p1,p2,s,exs],Return[$Failed];,
+Concentrations[{reactions__},arrhenius_?MatrixQ,enthalpies_?VectorQ,C0_?VectorQ,V_,Ta_,tres_,p1_,p2_,init_?VectorQ,{t0_?NumericQ,t1_?NumericQ},s_Symbol:Global`t,opts:OptionsPattern[]] :=
+	Module[{kineq, vars},
+		{kineq, vars} = Check[DeterministicModel[{reactions},arrhenius,enthalpies,C0,V,Ta,tres,p1,p2,s,FilterRules[opts,Options[DeterministicModel]]],Return[$Failed];,
 									{DeterministicModel::badarg,DeterministicModel::args,DeterministicModel::steady,RightHandSide::args,RightHandSide::badarg}];
-		If[Length[init]===(ReactionsData[{reactions},exs]["M"]+1),
+		If[Length[init]===(ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["M"]+1),
 			{
 				vars,
-				First[NDSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, {s, t0, t1}, FilterRules[{opts},Options[NDSolve]]]]
+				First[NDSolve[Join[kineq, Thread[(vars /. s -> t0) == init]], vars, {s, t0, t1}, FilterRules[opts,Options[NDSolve]]]]
 			},
 			Message[Concentrations::"init"];
 			$Failed
@@ -509,51 +505,62 @@ Concentrations[___] := (Message[Concentrations::"badarg"]; $Failed)
 StationaryPoints::usage = "StationaryPoints[{reactions},rates,initvalues,vars] returns the stationary points, found in a reaction simplex, \
 of the induced kinetic differential equation endowed with some kinetics described by the rates.";
 
-Options[StationaryPoints] := {ExternalSpecies->{}, Positivity->False, Conditions->{}, Method->"Automatic", MassAction->True};
+Options[StationaryPoints] := Join[{Positivity->False, Conditions->{}, Method->"Automatic", MassAction->True},Options[ReactionsData],Options[Reduce],Options[RightHandSide]];
 
 StationaryPoints::badarg = "Illegal argument of function StationaryPoints.";
 StationaryPoints::args = "One of the arguments `1`, `2` or `3` may have wrong shape.";
 StationaryPoints::noeql = "The reaction simplex contains no stationary point.";
 StationaryPoints::unknowm = "The system could not recognize the method `1`. Try Automatic or GammaLeftNullSpace.";
 
-StationaryPoints[{reactions__},opts___?OptionQ] :=
+StationaryPoints[{reactions__},opts:OptionsPattern[]] :=
 	Module[{r, vars},
-		{r, vars} = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R","variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{r, vars} = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["R","variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		StationaryPoints[{reactions},Array[Subscript[Global`k,#]&,r],Superscript[#,0]&/@vars,Superscript[#,"*"]& /@ vars,opts]
 	];
 
-StationaryPoints[{reactions__},rates_?VectorQ,opts___?OptionQ] :=
+StationaryPoints[{reactions__},rates_?VectorQ,opts:OptionsPattern[]] :=
 	Module[{vars},
-		vars = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		vars = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		StationaryPoints[{reactions},rates,Superscript[#,0]&/@vars,Superscript[#,"*"]& /@ vars,opts]
 	];
 
-StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,opts___?OptionQ] :=
-	StationaryPoints[{reactions},rates,init,Check[Superscript[#,"*"]& /@ ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],opts];
+StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,opts:OptionsPattern[]] :=
+	StationaryPoints[
+		{reactions},
+		rates,
+		init,
+		Check[Superscript[#,"*"]& /@ ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["variables"],
+			Return[$Failed];,
+			{ReactionsData::wrreac,ReactionsData::badarg}
+		],
+		opts
+	];
 
-StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VectorQ,opts___?OptionQ]:=
-	Module[{equilibriums, ropts, gamma, m, r, species, method, y, z, statp, balances, rateconst, inimass, nonneg, sol, fless, null, nullspacecond},
+StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VectorQ,opts:OptionsPattern[]]:=
+	Module[{equilibriums, gamma, m, r, species, method, y, z, statp, balances, rateconst, inimass, nonneg, sol, fless, null, nullspacecond},
 
-			ropts = Sequence@@FilterRules[{opts},Options[Reduce]];
-			{gamma, m, r, species} = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["\[Gamma]","M","R","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
-			fless = If[(Positivity/.{opts})/.Positivity->False,Less,LessEqual];
+			{gamma, m, r, species} = Check[
+				ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["\[Gamma]","M","R","species"],
+				Return[$Failed];,
+				{ReactionsData::wrreac,ReactionsData::badarg}
+			];
+			fless = If[OptionValue[Positivity],Less,LessEqual];
 
 			If[r===Length[rates] && m===Length[init] && m===Length[vars],
 
-				Switch[(method = (Method/.{opts}) /. Method->"Automatic"),
+				Switch[OptionValue[Method],
 
 					"Automatic",(*default method*)
 
 					z = Subscript[y,ToString[#]]& /@ Range[r];
 
 					{statp, balances, rateconst, inimass, nonneg} =
-						Thread/@{Check[RightHandSide[{reactions},rates,vars,FilterRules[{opts},Options[RightHandSide]]],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}] == 0,
+						Thread/@{Check[RightHandSide[{reactions},rates,vars,FilterRules[opts,Options[RightHandSide]]],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}] == 0,
 							gamma . z == vars-init, (rates /. Thread[species -> vars]) > 0, Cases[init,Except[0]]>0, fless[0,vars]};
 
-					If[(sol = Reduce[Join[statp, balances, rateconst, inimass, nonneg, (Conditions/.{opts})/.Conditions->{}], Join[vars,z], Reals, Backsubstitution->True, ropts])===False,
+					If[(sol = Reduce[Join[statp, balances, rateconst, inimass, nonneg, OptionValue[Conditions]], Join[vars,z], Reals, Backsubstitution->True, FilterRules[opts,Options[Reduce]]])===False,
 						Message[StationaryPoints::noeql];
 						Return[$Failed],
-
 						Join[{vars},{Sort[Sort[MyToRules[Select[#/.And->List,Not[MemberQ[z,First[#]]]&]]]&/@Flatten[{sol/.Thread[rateconst->True]/.Thread[inimass->True]/.Thread[nonneg->True]/.Or->List}]]}]
 					],
 
@@ -562,10 +569,10 @@ StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VectorQ,opts__
 					null = NullSpace[Transpose[gamma]] /. {}->{ConstantArray[0,m]};
 
 					{statp, nullspacecond, rateconst, inimass, nonneg} =
-						Thread/@{Check[RightHandSide[{reactions},rates,vars,FilterRules[{opts},Options[RightHandSide]]],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}] == 0,
+						Thread/@{Check[RightHandSide[{reactions},rates,vars,FilterRules[opts,Options[RightHandSide]]],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}] == 0,
 							null . (vars-init) == 0, (rates /. Thread[species -> vars]) > 0, Cases[init,Except[0]]>0,fless[0,vars]};
 
-					sol := Reduce[Join[statp, nullspacecond, rateconst, inimass, nonneg, (Conditions/.{opts})/.Conditions->{}], vars, Reals, Backsubstitution->True, ropts];
+					sol := Reduce[Join[statp, nullspacecond, rateconst, inimass, nonneg, OptionValue[Conditions]], vars, Reals, Backsubstitution->True, FilterRules[opts,Options[Reduce]]];
 
 					If[sol === False,
 						Message[StationaryPoints::noeql];
@@ -590,25 +597,25 @@ StationaryPoints[___] := (Message[StationaryPoints::"badarg"]; $Failed)
 
 GammaLeftNullSpace::usage = "GammaLeftNullSpace[{reactions},init,vars,opts] gives the left null space of the stoichiometric matrix \[Gamma].";
 
-Options[GammaLeftNullSpace] := {ExternalSpecies->{}};
+Options[GammaLeftNullSpace] := Options[ReactionsData];
 
 GammaLeftNullSpace::badarg = "Illegal argument of function GammaLeftNullSpace.";
 GammaLeftNullSpace::args = "One of the arguments `1` or `2` may have wrong shape.";
 GammaLeftNullSpace::null = "Left null space of \[Gamma] is null-dimensional.";
 
-GammaLeftNullSpace[{reactions__},opts___?OptionQ] :=
+GammaLeftNullSpace[{reactions__},opts:OptionsPattern[]] :=
 	Module[{lowerspecies},
-		lowerspecies = ToLowerCase[Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]];
+		lowerspecies = ToLowerCase[Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]];
 		GammaLeftNullSpace[{reactions}, ToExpression/@(#<>"0" &/@ lowerspecies), ToExpression/@lowerspecies, opts]
 	];
 
-GammaLeftNullSpace[{reactions__},init_?VectorQ,opts___?OptionQ] :=
-	GammaLeftNullSpace[{reactions},init,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["variables"],Return[$Failed];,
+GammaLeftNullSpace[{reactions__},init_?VectorQ,opts:OptionsPattern[]] :=
+	GammaLeftNullSpace[{reactions},init,Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["variables"],Return[$Failed];,
 													{ReactionsData::wrreac,ReactionsData::badarg}],opts];
 
-GammaLeftNullSpace[{reactions__},init_?VectorQ,vars_?VectorQ,opts___?OptionQ] :=
+GammaLeftNullSpace[{reactions__},init_?VectorQ,vars_?VectorQ,opts:OptionsPattern[]] :=
 	Module[{gamma, m, ns, conds, sol},
-			{gamma, m} = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["\[Gamma]","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			{gamma, m} = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["\[Gamma]","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[m===Length[init] && m===Length[vars],
 
@@ -631,17 +638,17 @@ GammaLeftNullSpace[___] := (Message[GammaLeftNullSpace::badarg]; $Failed)
 MassConservationRelations::usage = "MassConservationRelations[{reactions},vars] gives a set of conditions for a (strictly positive) mass vector \
 showing whether the given reaction is mass conserving or not.";
 
-Options[MassConservationRelations] := {ExternalSpecies->{}};
+Options[MassConservationRelations] := Options[ReactionsData];
 
 MassConservationRelations::badarg = "Illegal argument of function MassConservationRelations.";
 
-MassConservationRelations[{reactions__},opts___?OptionQ] :=
-	MassConservationRelations[{reactions}, Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["variables"],Return[$Failed];,
+MassConservationRelations[{reactions__},opts:OptionsPattern[]] :=
+	MassConservationRelations[{reactions}, Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["variables"],Return[$Failed];,
 													{ReactionsData::wrreac,ReactionsData::badarg}] /. (Global`c -> Global`\[Rho]), opts];
 
-MassConservationRelations[{reactions__},vars_?VectorQ,opts___?OptionQ] :=
+MassConservationRelations[{reactions__},vars_?VectorQ,opts:OptionsPattern[]] :=
 	Module[{gamma, ropts},
-			gamma = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["\[Gamma]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			gamma = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["\[Gamma]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 			ropts = FilterRules[{opts},Options[Reduce]];
 
 			Reduce[Flatten[Thread/@{Transpose[gamma] . vars==0, vars>0}], vars, Reals, Backsubstitution->True, ropts] /. And -> List /. Or -> List
@@ -656,25 +663,25 @@ induced kinetic differential equation endowed with some kinetics given by the ra
 EigensystemJacobian::badarg = "Illegal argument of function EigensystemJacobian.";
 EigensystemJacobian::args = "One of the arguments `1` or `2` may have wrong shape.";
 
-Options[EigensystemJacobian] := {ExternalSpecies->{},MassAction->True};
+Options[EigensystemJacobian] := Join[{MassAction->True},OptionsPattern[ReactionsData],Options[RightHandSide]];
 
 EigensystemJacobian[{reactions__}, opts : OptionsPattern[]] :=
 	Module[{r, vars},
-		{r, vars} = Check[ReactionsData[{reactions},opts]["R","variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{r, vars} = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["R","variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		EigensystemJacobian[{reactions},Array[Subscript[Global`k,#]&,r],vars,opts]
 	];
 
 EigensystemJacobian[{reactions__},rates_?VectorQ,opts : OptionsPattern[]] :=
 	EigensystemJacobian[{reactions},rates,
-			Check[ReactionsData[{reactions},opts]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],opts];
+			Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["variables"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],opts];
 
 EigensystemJacobian[{reactions__},rates_?VectorQ,vars_?VectorQ, opts : OptionsPattern[]] :=
 	Module[{m, r},
-		{m, r} = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["M","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{m, r} = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["M","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		If[r===Length[rates] && m===Length[vars],
 
-			Eigensystem[D[Check[RightHandSide[{reactions},rates,vars,opts],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}],{vars}]],
+			Eigensystem[D[Check[RightHandSide[{reactions},rates,vars,FilterRules[opts,Options[RightHandSide]]],Return[$Failed];,{RightHandSide::args,RightHandSide::badarg}],{vars}]],
 
 			Message[EigensystemJacobian::args,rates,vars];
 			$Failed
@@ -695,22 +702,20 @@ AbsoluteConcentrationRobustness::maybe = "`1`.";
 AbsoluteConcentrationRobustness::timeexc = "Time spent on the calculations of a positive stationary point exceeded `1` seconds \
 without returning any result (the deficiency is one and there are nonterminal complexes differing only in one species). Try also StationaryPoints.";
 
-Options[AbsoluteConcentrationRobustness] := { TimeLimit -> 120, ExternalSpecies -> {} };
+Options[AbsoluteConcentrationRobustness] := Join[{TimeConstraint -> 120}, Options[ReactionsData],Options[StationaryPoints]];
 
-AbsoluteConcentrationRobustness[{reactions__},opts___?OptionQ] :=
-	Module[{exs, time, delta, fhjstrong, fhjterminal, nonterms, acr},
+AbsoluteConcentrationRobustness[{reactions__},opts:OptionsPattern[]] :=
+	Module[{delta, fhjstrong, fhjterminal, nonterms, acr},
 
-		exs = Sequence @@ FilterRules[{opts},ExternalSpecies];
-		time = (TimeLimit /. FilterRules[{opts},TimeLimit]) /. TimeLimit->120;
 		{delta, fhjstrong, fhjterminal} =
-			Check[ReactionsData[{reactions},exs]["deficiency","fhjstronglyconnectedcomponents","fhjterminalstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["deficiency","fhjstronglyconnectedcomponents","fhjterminalstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		If[ Last[StringSplit[delta,"="]]=!="1",
 
 			Message[AbsoluteConcentrationRobustness::"maybe","Deficiency does not equal to 1"];
 			Return[{reactions}],
 
-			nonterms = Flatten[fhjstrong/.Thread[fhjterminal->Sequence[]]] /. "0"->0 /. Thread[exs->0];
+			nonterms = Flatten[fhjstrong/.Thread[fhjterminal->Sequence[]]] /. "0"->0 /. Thread[OptionValue[ExternalSpecies]->0];
 			acr = Flatten[(nonterms-# &/@ nonterms) /. Plus[A_,B_]->0 /. 0->{}]; (*/. r_*A_:>A;*)
 
 			If[ acr === {},
@@ -718,10 +723,10 @@ AbsoluteConcentrationRobustness[{reactions__},opts___?OptionQ] :=
 				Message[AbsoluteConcentrationRobustness::"maybe","Deficiency is one but there do not exist nonterminal complexes differing only in one species"];
 				Return[{reactions}],
 
-				Switch[TimeConstrained[Check[Length[StationaryPoints[{reactions},exs,Positivity->True,Sequence@@FilterRules[{opts},Conditions],Sequence@@FilterRules[{opts},Method]]]>=2,False,
-								{StationaryPoints::unknowm,StationaryPoints::args,StationaryPoints::badarg,StationaryPoints::noeql}],time,"Abort"],
+				Switch[TimeConstrained[Check[Length[StationaryPoints[{reactions},Positivity->True,FilterRules[opts, StationaryPoints]]]>=2,False,
+								{StationaryPoints::unknowm,StationaryPoints::args,StationaryPoints::badarg,StationaryPoints::noeql}],OptionValue[TimeConstraint],"Abort"],
 						"Abort",
-							Message[AbsoluteConcentrationRobustness::"timeexc",time];
+							Message[AbsoluteConcentrationRobustness::"timeexc",OptionValue[TimeConstraint]];
 							Return[{reactions}],
 						False,
 							Message[AbsoluteConcentrationRobustness::"maybe","There are no positive stationary points."];
