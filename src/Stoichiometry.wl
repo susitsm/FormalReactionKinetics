@@ -187,7 +187,7 @@ Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
 					"\[Beta]" -> beta,
 					"\[Gamma]" -> gamma,
 					"reactionsteporders" -> (Total /@ Transpose[alpha]),
-					"variables" -> (Subscript[Global`c, #] & /@ species),
+					"variables" -> (Subscript["c", #] & /@ species),
 					"volpertgraph" -> {vggraphwzerocomplex, Drop[indexed, lsp]}
 				}]
 			]
@@ -305,8 +305,8 @@ graph making all its edges reversible.";
 ReversibleFHJRepresentation::badarg = "Illegal argument of function ReversibleFHJRepresentation.";
 
 
-SyntaxInformation[ReversibleFHJRepresentation]={"ArgumentsPattern"->{__,OptionsPattern[]}};
 Options[ReversibleFHJRepresentation] = {ExternalSpecies->{}};
+SyntaxInformation[ReversibleFHJRepresentation]={"ArgumentsPattern"->{__,OptionsPattern[]}};
 ReversibleFHJRepresentation[{reactions__},externals:(_?VectorQ|OptionsPattern[])] :=
 	ReplaceRepeated[
 		Check[ReactionsData[{reactions},externals]["fhjgraphedges"],Abort[];,{ReactionsData::wrreac,ReactionsData::badarg}],
@@ -354,17 +354,16 @@ FilterReactions::badarg = "Illegal argument of function FilterReactions.";
 Options[FilterReactions]:={ExternalSpecies -> {}, Side -> "All"};
 
 FilterReactions[{reactions__},specs_?VectorQ,opts : OptionsPattern[]]:=
-	Module[{ options, rdata, fhj, sp, spp, side },
+	Module[{ rdata, fhj, sp, spp },
 
-		options = Flatten[{opts, Options[FilterReactions]}];
-		rdata = Check[ReactionsData[{reactions},ExternalSpecies /. options]["fhjgraphedges","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		rdata = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["fhjgraphedges","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 		If[rdata === $Failed, Return[$Failed];];
 		{fhj, sp} = rdata;
 
 		If[(spp = Intersection[specs,sp]) =!= {},
 
-			If[ MemberQ[{"Reactant","Product","All"}, (side = Side /. options)],
-				Switch[side,
+			If[ MemberQ[{"Reactant","Product","All"}, OptionValue[Side]],
+				Switch[OptionValue[Side],
 					"Reactant",
 						Flatten[If[Intersection[complextospecies[First[#]],specs]=!={}, #, {}] &/@ fhj],
 					"Product",
@@ -391,7 +390,7 @@ FromStoichiometry::vars = "The number of species does not match with the dimensi
 FromStoichiometry::badarg = "Illegal argument of function FromStoichiometry.";
 
 FromStoichiometry[alpha_?MatrixQ,beta_?MatrixQ] :=
-	FromStoichiometry[alpha, beta, Array[Global`X[#]&,Length[alpha]]];
+	FromStoichiometry[alpha, beta, Array["X"[#]&,Length[alpha]]];
 
 FromStoichiometry[alpha_?MatrixQ,beta_?MatrixQ,specs_?VectorQ]:=
 	Module[{ m, r },
@@ -430,7 +429,7 @@ DeleteAutocatalysis[{reactions__}, variables_?VectorQ, OptionsPattern[]] :=
 	DeleteAutocatalysis[Sequence @@ Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Beta]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],variables];
 
 DeleteAutocatalysis[alpha_?MatrixQ,beta_?MatrixQ] :=
-	DeleteAutocatalysis[alpha, beta, Array[Global`X[#]&,Length[alpha]]];
+	DeleteAutocatalysis[alpha, beta, Array["X"[#]&,Length[alpha]]];
 
 DeleteAutocatalysis[alpha_?MatrixQ,beta_?MatrixQ,specs_?VectorQ]:=
 	Module[{ gamma, m, r, reacs, revreacs },
@@ -876,7 +875,7 @@ SCLGraph[reactionData_,opts___?OptionQ] :=
  {edges, edgeLabels} = Flatten[
          Function[complex, Function[species,{#[[1]]->species,complex}] /@ complextospecies[complex]]
          /@ DeleteDuplicates[Flatten[ReactionsToList[ToCanonicalForm[EdgeList[#[[2]]]]]/.RightArrow->List]] &
-         /@ ({ Subscript[Global`L, #]& /@ Range[Length[linkageClasses]],linkageClasses}//Transpose),
+         /@ ({ Subscript["L", #]& /@ Range[Length[linkageClasses]],linkageClasses}//Transpose),
          2
  ]// Transpose;
  UndirectedGraph[edges,EdgeLabels->Table[edges[[i]]->edgeLabels[[i]],{i, Length[edges]}]]
@@ -1037,7 +1036,7 @@ DetailedBalanced::rates = "The number of reaction steps does not match with that
 DetailedBalanced::misscirc = "We may have missing circuit condition(s).";
 DetailedBalanced::missspf = "We may have missing spanning forest condition(s).";
 
-Options[DetailedBalanced] := {ExternalSpecies -> {}, GeneratedRateCoefficient -> Global`k};
+Options[DetailedBalanced] := {ExternalSpecies -> {}, GeneratedRateCoefficient -> "k"};
 
 SyntaxInformation[DetailedBalanced]={"ArgumentsPattern"->{{__},___}};
 
