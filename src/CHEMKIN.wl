@@ -1,5 +1,18 @@
 (* ::Package:: *)
 
+BeginPackage["CHEMKIN`"]
+Unprotect["CHEMKIN`*"];
+ClearAll["CHEMKIN`*"];
+ClearAll["CHEMKIN`Private`*"];
+
+$CHEMKIN::usage = "Read and write CHEMKIN files";
+CHEMKINImport::usage = "CHEMKINImport[file] imports all the relevant data from a CHEMKIN file.";
+CHEMKINExport::usage = "CHEMKINExport[file,reaction] exports the reaction into a CHEMKIN file.";
+
+
+Begin["`Private`"];
+
+
 MyTotal[x_] :=
 	Module[{ pos },
 
@@ -298,3 +311,8 @@ CHEMKINExport[filename_?StringQ, reactions_List] :=
 
 	];
 CHEMKINExport[___][___] := (Message[CHEMKINExport::"badarg"]; $Failed)
+
+
+End[];
+EndPackage[];
+Protect["CHEMKIN`*"];
