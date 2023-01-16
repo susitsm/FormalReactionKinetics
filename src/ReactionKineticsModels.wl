@@ -267,4 +267,4 @@ GetReaction[___] := (Message[GetReaction::"badarg"]; $Failed)
 
 End[]
 EndPackage[];
-Protect["ReactionKinetics`*"];
+Protect["ReactionKineticsModels`*"];

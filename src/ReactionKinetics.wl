@@ -2474,11 +2474,6 @@ Protect[
 
 SetAttributes[
 	{
-		Models,
-		Reactions,
-		BioModels,
-		BioReactions,
-		GetReaction,
 		(**)
 		ToCanonicalForm,
 		ToReversible,
@@ -2523,8 +2518,6 @@ SetAttributes[
 		OpenReactionKineticsNamesPalette,
 		ReactionRatesNotebook,
 		(**)
-		CHEMKINExport,
-		CHEMKINImport,
 		FilterReactions,
 		FromStoichiometry,
 		DeleteAutocatalysis,
