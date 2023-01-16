@@ -1033,7 +1033,7 @@ DetailedBalanced::rates = "The number of reaction steps does not match with that
 DetailedBalanced::misscirc = "We may have missing circuit condition(s).";
 DetailedBalanced::missspf = "We may have missing spanning forest condition(s).";
 
-Options[DetailedBalanced] := Join[Options[ReactionsData, {GeneratedRateCoefficient -> "k"}];
+Options[DetailedBalanced] := Join[Options[ReactionsData], {GeneratedRateCoefficient -> "k"}];
 
 SyntaxInformation[DetailedBalanced]={"ArgumentsPattern"->{{__},___}};
 
