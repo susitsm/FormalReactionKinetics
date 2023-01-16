@@ -146,7 +146,7 @@ $ReactionKineticsVersionNumber = "1.0 [March 25, 2018]";
 Begin["`Private`"]
 
 
-(* ::Subsubsection:: *)
+(* ::Subsubsection::Closed:: *)
 (*Options*)
 
 
@@ -173,6 +173,8 @@ depending on SubgraphHighlight \[Rule] False or True.";
 Highlighted::usage = "An option for function ShowVolpertGraph. Highlighted \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices.";
 Indexed::usage = "An option for function ShowVolpertGraph. Indexed \[Rule] listspecies displays the Volpert graph with Volpert indexes, \
 where listspecies is considered as the initial set of species.";
+InternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
+The list of internal species of a reaction can be given by InternalSpecies \[Rule] listinternals. Only one of ExternalSpecies or InternalSpecies can be present";
 LPBased::usage = "Method \[Rule] LPBased is an option for Decompositions using linear programming to obtain decompositions for an overall reaction.";
 MassAction::usage = "An option for functions RightHandSide, DeterministicModel, Concentrations, StationaryPoints and EigensystemJacobian. When \
 MassAction \[Rule] True, mass action type kinetics are taken into account with reaction rate coefficients.";
@@ -2455,6 +2457,7 @@ Protect[
 	MassAction,
 	Highlight,
 	Indexed,
+	InternalSpecies,
 	MaxIteration,
 	Memo,
 	Method,

@@ -105,10 +105,11 @@ subgraphedges[graph_,vtceslist_] :=
 			If[ Length[#] === 1, {{}, #}, Join[{EdgeList[Subgraph[graph, #]] /. DirectedEdge->Rule}, {#}]] & /@ vtceslist;
 
 
-Rdata[{reactions__},{externals___}] := Rdata[{reactions},{externals}] =
+RdataOptions = {ExternalSpecies->{},InternalSpecies->{}};
+Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts] =
 	Module[
 			{ reacs,
-			  m, builtin, allExternals, exsrule,
+			  m, builtin, externals, allExternals, exsrule,
 			  reactionsteps, internalReactionSteps, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, species,
 			  indexed, a, b, e, nloc, lloc, sloc,
 			  lsp, lrs, alpha, beta, gamma, fhjweakvertices, fhjweakcomponents,
@@ -121,12 +122,23 @@ Rdata[{reactions__},{externals___}] := Rdata[{reactions},{externals}] =
 			If[(m = Cases[reacs,_String])=!={},
 
 				builtin = Check[(#->GetReaction[#])& /@ m, Return[$Failed];, GetReaction::"nvmod"];(**)
-				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], externals],
-
-				allExternals = DeleteDuplicates[Prepend[{externals},"0"]/.(0->"0")]; (*internalspecies megadas*)
-				exsrule = Thread[allExternals -> 0];
+				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], opts],
 
 				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
+				If[OptionValue[ExternalSpecies]=!={} && OptionValue[InternalSpecies]=!={},
+				    (Message[ReactionsData::"internalexternal"]; Return[$Failed]),
+					If[OptionValue[InternalSpecies]=!={},
+						Block[{allSpecies,allComplexes},
+							allComplexes = DeleteDuplicates[Flatten[reactionsteps /. RightArrow -> List]];
+							allSpecies=complextospecies[allComplexes] /. "0" -> Sequence[];
+							externals=Complement[allSpecies,OptionValue[InternalSpecies]]
+						],
+						externals=OptionValue[ExternalSpecies];
+					]
+				];
+				allExternals = DeleteDuplicates[Prepend[externals,"0"]/.(0->"0")]; (*internalspecies megadas*)
+				exsrule = Thread[allExternals -> 0];
+
 				internalReactionSteps = DeleteDuplicates[reactionsteps /. exsrule /. (0->"0")];
 
 				fhjgraph = Graph[Rule@@@internalReactionSteps];
@@ -215,17 +227,18 @@ properties. Check ReactionsData[\"Properties\"].";
 
 
 ReactionsData::badarg = "Illegal argument of function ReactionsData.";
+ReactionsData::internalexternal = "Only one of InternalSpecies and ExternalSpecies can be present.";
 ReactionsData::badname = "At least one of the arguments '`1`' is a non-identified property. Try \
 ReactionsData[\"Properties\"].";
 ReactionsData::wrreac = "Argument `1` may not be in a correct form. Check OpenReactionKineticsPalette[].";
 
 
 SyntaxInformation[ReactionsData]={"ArgumentsPattern"->{__,OptionsPattern[]}};
-Options[ReactionsData] = {ExternalSpecies->{}};
+Options[ReactionsData] = RdataOptions;
 ReactionsData["Properties"] := PropertiesReactionsData;
 ReactionsData[{},OptionsPattern[]][] := {};
-ReactionsData[{reactions__},OptionsPattern[]][] :=
-	Check[Rdata[{reactions},OptionValue[ExternalSpecies]],
+ReactionsData[{reactions__},opts:OptionsPattern[]][] :=
+	Check[Rdata[{reactions},opts],
 					Message[ReactionsData::"wrreac",ReactionsForm[{reactions}]];
 					Return[$Failed]
 	];
@@ -239,14 +252,14 @@ ReactionsData[{},opts:OptionsPattern[]][data__?StringQ] := (
 	];
 	Return[{}]
 );
-ReactionsData[{reactions__},OptionsPattern[]][data__?StringQ] := (
+ReactionsData[{reactions__},opts:OptionsPattern[]][data__?StringQ] := (
 	If[Nand @@ Map[MemberQ[PropertiesReactionsData,#]&,{data}],
 		Message[ReactionsData::"badname",data];
 	];
 	Catch[
 		Part[
 			ReplaceAll[{data},
-					Check[Rdata[{reactions},OptionValue[ExternalSpecies]],
+					Check[Rdata[{reactions},opts],
 							Throw[
 								Message[ReactionsData::"wrreac",ReactionsForm[{reactions}]];
 								Return[$Failed]
