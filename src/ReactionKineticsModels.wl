@@ -253,8 +253,7 @@ SyntaxInformation[GetReaction]={"ArgumentsPattern"->{__}};
 
 GetReaction["Models"] := ModelsSumPrivate; (*Models*)
 GetReaction[x_?StringQ] :=
-	If[{Print["asdf"],
-		KeyExistsQ[ReactionsSumPrivate,x]}[[2]], (*Models*)
+	If[KeyExistsQ[ReactionsSumPrivate,x], (*Models*)
 		    ReactionsSumPrivate[x],
 			Message[GetReaction::"nvmod",x];
 			$Failed

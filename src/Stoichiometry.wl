@@ -12,7 +12,7 @@ ToCanonicalForm::badarg = "Illegal argument of function ToCanonicalForm.";
 SyntaxInformation[ToCanonicalForm]={"ArgumentsPattern"->{__}};
 (* Reactions is from ReactionKineticsModels *)
 ToCanonicalForm[reactions__]:=
-	Flatten[{reactions} /. Reactions] /.
+	Flatten[{reactions} /. ReactionKineticsModels`Reactions] /.
 					  Join[Thread[{LeftRightArrow,DoubleLeftRightArrow,LongLeftRightArrow,DoubleLongLeftRightArrow,RightArrowLeftArrow,TwoWayRule,UndirectedEdge}->Equilibrium],
 									{LeftArrowRightArrow->ReverseEquilibrium},
 									Thread[{Rule,ShortRightArrow,DoubleRightArrow,LongRightArrow,DoubleLongRightArrow,DirectedEdge}->RightArrow],
@@ -105,7 +105,7 @@ subgraphedges[graph_,vtceslist_] :=
 			If[ Length[#] === 1, {{}, #}, Join[{EdgeList[Subgraph[graph, #]] /. DirectedEdge->Rule}, {#}]] & /@ vtceslist;
 
 
-Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
+Rdata[{reactions__},{externals___}] := Rdata[{reactions},{externals}] =
 	Module[
 			{ reacs,
 			  m, builtin, allExternals, exsrule,
@@ -129,7 +129,7 @@ Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
 				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
 				internalReactionSteps = DeleteDuplicates[reactionsteps /. exsrule /. (0->"0")];
 
-				fhjgraph = Graph[internalReactionSteps];
+				fhjgraph = Graph[Rule@@@internalReactionSteps];
 
 				complexes = DeleteDuplicates[Flatten[internalReactionSteps /. RightArrow -> List]]; (*Sort*)
 
@@ -173,7 +173,7 @@ Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
 					"reactionsteps" -> reactionsteps, (*steprule*)
 					"R" -> lrs,
 					"complexes" -> complexes,
-					"fhjgraphedges" -> internalReactionSteps /. RightArrow -> Rule,
+					"fhjgraphedges" -> Rule@@@internalReactionSteps,
 					"fhjweaklyconnectedcomponents" -> fhjweakcomponents,
 					"fhjstronglyconnectedcomponents" -> fhjstrongcomponents,
 					"fhjterminalstronglyconnectedcomponents" -> fhjterminalstrongcomponents,
@@ -550,7 +550,7 @@ MaxFHJStronglyConnectedComponents[___][___] := (Message[MaxFHJStronglyConnectedC
 
 FHJGraph::usage = "FHJGraph[{reactions},options] returns the Feinberg-Horn-Jackson graph of the reaction \
 of the reaction with options from ReactionsData.";
-Options[FHJGraph] = Join[Options[ReactionsData],Options[GraphPlot],Options[LayeredGraphPlot],Options[GraphPlot3D],Options[TreePlot]];
+Options[FHJGraph] = Options[ReactionsData];
 
 FHJGraph[{reactions__}, opts:OptionsPattern[]] := Graph[ReactionsData[{reactions}, FilterRules[opts, Options[ReactionsData]]]["fhjgraphedges"]]
 
@@ -567,7 +567,14 @@ ShowFHJGraph::ccols = "The list of colors has wrong shape.";
 ShowFHJGraph::srates = "The list of reaction rate coefficients has wrong shape.";
 ShowFHJGraph::sccomps = "The list of colors (for strongly connected components) may have wrong shape or complex colors are also given.";
 
-Options[ShowFHJGraph]:=Join[{ComplexColors -> {}, PlotFunction -> "GraphPlot", StronglyConnectedComponentsColors -> {}, Numbered -> False}, Options[ReactionsData]];
+Options[ShowFHJGraph]:=Join[
+  {ComplexColors -> {}, PlotFunction -> "GraphPlot", StronglyConnectedComponentsColors -> {}, Numbered -> False},
+   Options[ReactionsData],
+   Options[GraphPlot],
+   Options[LayeredGraphPlot],
+   Options[GraphPlot3D],
+   Options[TreePlot]
+];
 
 (*SyntaxInformation[ShowFHJGraph]={"ArgumentsPattern"->{{__},___}};*)
 

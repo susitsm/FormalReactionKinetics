@@ -146,7 +146,7 @@ $ReactionKineticsVersionNumber = "1.0 [March 25, 2018]";
 Begin["`Private`"]
 
 
-(* ::Subsubsection::Closed:: *)
+(* ::Subsubsection:: *)
 (*Options*)
 
 
@@ -2480,6 +2480,7 @@ SetAttributes[
 		ReactionsData,
 		ReversibleQ,
 		WeaklyReversibleQ,
+		FHJGraph,
 		ShowFHJGraph,
 		ShowVolpertGraph,
 		AcyclicVolpertGraphQ,
