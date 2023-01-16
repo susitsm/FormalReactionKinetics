@@ -54,6 +54,20 @@ Reaction Kinetics: Exercises, Programs and Theorems. Mathematica for determinist
 
 
 (* ::Subsection::Closed:: *)
+(*Models*)
+
+
+Get[FindFile["ReactionKineticsModels.wl"]]
+
+
+(* ::Subsection::Closed:: *)
+(*CHEMKIN*)
+
+
+Get[FindFile["CHEMKIN.wl"]]
+
+
+(* ::Subsection::Closed:: *)
 (*begin*)
 
 
@@ -256,20 +270,6 @@ MyMinimize[var_, conlist_, vars_] :=
 	];
 
 MyMaximize[var_, conlist_, vars_] := -MyMinimize[-var, conlist, vars];
-
-
-(* ::Subsection::Closed:: *)
-(*models*)
-
-
-Get[FindFile["ReactionKineticsModels.wl"]]
-
-
-(* ::Subsection::Closed:: *)
-(*CHEMKIN*)
-
-
-Get[FindFile["CHEMKIN.wl"]]
 
 
 (* ::Subsection::Closed:: *)
