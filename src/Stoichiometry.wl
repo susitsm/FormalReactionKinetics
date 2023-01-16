@@ -109,7 +109,7 @@ Rdata[{reactions__},{externals__}] := Rdata[{reactions},externals] =
 	Module[
 			{ reacs,
 			  m, builtin, allExternals, exsrule,
-			  reactionsteps, internalReactionSteps, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, sp,
+			  reactionsteps, internalReactionSteps, fhjgraph, complexes, vgggraph, vgraph, vggraphwzerocomplex, species,
 			  indexed, a, b, e, nloc, lloc, sloc,
 			  lsp, lrs, alpha, beta, gamma, fhjweakvertices, fhjweakcomponents,
 			  fhjstrongvertices, fhjstrongcomponents,
@@ -350,7 +350,7 @@ FilterReactions::badsp = "Some of the species may be not contained in the list o
 FilterReactions::badopt = "Option Side only takes three values: \"Reactant\", \"Product\" or \"All\".";
 FilterReactions::badarg = "Illegal argument of function FilterReactions.";
 
-Options[FilterReactions]:={ExternalSpecies -> {}, Side -> "All"};
+Options[FilterReactions]:=Join[{Side -> "All"}, Options[ReactionsData]];
 
 FilterReactions[{reactions__},specs_?VectorQ,opts : OptionsPattern[]]:=
 	Module[{ rdata, fhj, sp, spp },
@@ -422,10 +422,10 @@ DeleteAutocatalysis::badarg = "Illegal argument of function DeleteAutocatalysis.
 Options[DeleteAutocatalysis] := Options[ReactionsData];
 
 DeleteAutocatalysis[{reactions__}, opts:OptionsPattern[]] :=
-	DeleteAutocatalysis @@ Check[ReactionsData[{reactions},opts]["\[Alpha]","\[Beta]","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+	DeleteAutocatalysis @@ Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["\[Alpha]","\[Beta]","species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 DeleteAutocatalysis[{reactions__}, variables_?VectorQ, opts:OptionsPattern[]] :=
-	DeleteAutocatalysis[Sequence @@ Check[ReactionsData[{reactions},opts]["\[Alpha]","\[Beta]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],variables];
+	DeleteAutocatalysis[Sequence @@ Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["\[Alpha]","\[Beta]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}],variables];
 
 DeleteAutocatalysis[alpha_?MatrixQ,beta_?MatrixQ] :=
 	DeleteAutocatalysis[alpha, beta, Array["X"[#]&,Length[alpha]]];
@@ -467,7 +467,7 @@ Options[MinFHJWeaklyConnectedComponents] := Options[ReactionsData];
 MinFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjwcc, lengthvtxes, minvtxes},
 
-		fhjwcc = Check[ReactionsData[{reactions},opts]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjwcc = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjwcc;
 
@@ -488,7 +488,7 @@ Options[MinFHJStronglyConnectedComponents] := Options[ReactionsData];
 MinFHJStronglyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjscc, lengthvtxes, minvtxes},
 
-		fhjscc = Check[ReactionsData[{reactions},opts]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjscc = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjscc;
 
@@ -509,7 +509,7 @@ Options[MaxFHJWeaklyConnectedComponents] := Options[ReactionsData];
 MaxFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjwcc, lengthvtxes, maxvtxes},
 
-		fhjwcc = Check[ReactionsData[{reactions},opts]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjwcc = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["fhjweaklyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjwcc;
 
@@ -530,7 +530,7 @@ Options[MaxFHJStronglyConnectedComponents] := Options[ReactionsData];
 MaxFHJStronglyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 	Module[{fhjscc, lengthvtxes, maxvtxes},
 
-		fhjscc = Check[ReactionsData[{reactions},opts]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		fhjscc = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["fhjstronglyconnectedcomponents"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		lengthvtxes = Length[Last[#]] &/@ fhjscc;
 
@@ -545,7 +545,14 @@ MaxFHJStronglyConnectedComponents[___][___] := (Message[MaxFHJStronglyConnectedC
 
 
 (* ::Subsubsection::Closed:: *)
-(*ShowFHJGraph*)
+(*FHJGraph, ShowFHJGraph*)
+
+
+FHJGraph::usage = "FHJGraph[{reactions},options] returns the Feinberg-Horn-Jackson graph of the reaction \
+of the reaction with options from ReactionsData.";
+Options[FHJGraph] = Join[Options[ReactionsData],Options[GraphPlot],Options[LayeredGraphPlot],Options[GraphPlot3D],Options[TreePlot]];
+
+FHJGraph[{reactions__}, opts:OptionsPattern[]] := Graph[ReactionsData[{reactions}, FilterRules[opts, Options[ReactionsData]]]["fhjgraphedges"]]
 
 
 GraphPlotFunctionQ := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlot3D","TreePlot"},#]&;
@@ -560,24 +567,24 @@ ShowFHJGraph::ccols = "The list of colors has wrong shape.";
 ShowFHJGraph::srates = "The list of reaction rate coefficients has wrong shape.";
 ShowFHJGraph::sccomps = "The list of colors (for strongly connected components) may have wrong shape or complex colors are also given.";
 
-Options[ShowFHJGraph]:={ExternalSpecies -> {}, ComplexColors -> {}, PlotFunction -> "GraphPlot", StronglyConnectedComponentsColors -> {}, Numbered -> False};
+Options[ShowFHJGraph]:=Join[{ComplexColors -> {}, PlotFunction -> "GraphPlot", StronglyConnectedComponentsColors -> {}, Numbered -> False}, Options[ReactionsData]];
 
 (*SyntaxInformation[ShowFHJGraph]={"ArgumentsPattern"->{{__},___}};*)
 
-ShowFHJGraph[{reactions__}, rates_List:{}, opts___?OptionQ] :=
+ShowFHJGraph[{reactions__}, rates_List:{}, opts:OptionsPattern[]] :=
 	Module[{ cc, externals, rdata, exs,
 			 n, r, fhj, cxs, fhjscc, graphfunc, nmd,
 			 nopt, c, sc, rscc, rs
 		   },
 
-			cc = FilterRules[{opts},Options[ShowFHJGraph]];
+			cc = FilterRules[opts,Options[ShowFHJGraph]];
 
-			rdata = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["N","R","fhjgraphedges","complexes","fhjstronglyconnectedcomponents"], Return[$Failed], {ReactionsData::wrreac,ReactionsData::badarg}];
+			rdata = Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["N","R","fhjgraphedges","complexes","fhjstronglyconnectedcomponents"], Return[$Failed], {ReactionsData::wrreac,ReactionsData::badarg}];
 			If[rdata === $Failed, Return[$Failed]];
 
 			{n, r, fhj, cxs, fhjscc} = rdata;
 
-			graphfunc = (PlotFunction /. cc) /. PlotFunction->"GraphPlot";
+			graphfunc = OptionValue[PlotFunction];
 			If[GraphPlotFunctionQ[graphfunc],
 				graphfunc = ToExpression[graphfunc],
 				Message[ShowFHJGraph::"funcarg",graphfunc];
@@ -585,20 +592,20 @@ ShowFHJGraph[{reactions__}, rates_List:{}, opts___?OptionQ] :=
 			];
 
 			fhjscc = Last /@ fhjscc;
-			If[((Numbered /. cc) /. Numbered -> False)===True,
+			If[OptionValue[Numbered]===True,
 				cxs = Thread[Rule[cxs,Range[n]]];
 				fhj = fhj /. cxs;
 				fhjscc = fhjscc /. cxs;
 				cxs = Last /@ cxs;
 			];
 
-			nopt = FilterRules[{opts},Options[graphfunc]];
-			c = ComplexColors /. cc;
-			sc = StronglyConnectedComponentsColors /. cc;
+			nopt = FilterRules[opts,Options[graphfunc]];
+			c = OptionValue[ComplexColors];
+			sc = OptionValue[StronglyConnectedComponentsColors];
 
-			If[sc =!= {} && sc =!= StronglyConnectedComponentsColors,
+			If[sc =!= {},
 
-				If[(VectorQ[sc] && Length[fhjscc] === Length[sc]) && (c === {} || c === ComplexColors),
+				If[(VectorQ[sc] && Length[fhjscc] === Length[sc]) && c === {},
 					rscc = fhj /. Flatten[Thread[First[#]->Thread[Style[First[#], Plain, Last[#]]]] &/@ Thread[{fhjscc,sc}]];
 						If[rates==={},
 							graphfunc[rscc,nopt],
@@ -612,7 +619,7 @@ ShowFHJGraph[{reactions__}, rates_List:{}, opts___?OptionQ] :=
 					$Failed
 				],
 
-				If[c =!= {} && c =!= ComplexColors,
+				If[c =!= {},
 
 					If[VectorQ[c] && n===Length[c],
 						rs = fhj /. (First[#]->Style[First[#], Plain, Last[#]] &/@ Thread[{cxs,c}]);
@@ -667,15 +674,15 @@ VolpertIndexing[alpha_?MatrixQ, beta_?MatrixQ, m0_?VectorQ] :=
 		MapAt[# - 1 &, (Last[iterationlist] /. (1 -> Infinity)) + Total[iterationlist], 2]
 	];
 
-Options[VolpertIndexing] := {ExternalSpecies -> {}, Verbose -> False};
+Options[VolpertIndexing] := Join[{Verbose -> False}, Options[ReactionsData]];
 
-VolpertIndexing[{reactions__}, initspecies_?VectorQ, specsreacs_List : {}, OptionsPattern[]]:=
+VolpertIndexing[{reactions__}, initspecies_?VectorQ, specsreacs_List : {}, opts:OptionsPattern[]]:=
 	Module[{
 			rdata, m, r, sp, reacs, vggraph, vgraph, w, w0, indexed, complx, initcomplx,
 			indexedr, indexedsp, a, b, v, req, z1, z2, t1, t2, vindeces
 		   },
 
-		rdata = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["M","R","species","fhjgraphedges","volpertgraph"],Return[$Failed],
+		rdata = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["M","R","species","fhjgraphedges","volpertgraph"],Return[$Failed],
 							     {ReactionsData::wrreac,ReactionsData::badarg}];
 
 		If[rdata === $Failed, Return[$Failed], {m, r, sp, reacs, vggraph} = rdata; ];
@@ -742,34 +749,39 @@ GraphPlotFunction2Q := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlo
 
 ShowVolpertGraph::usage = "ShowVolpertGraph[{reactions},options] visualizes the Volpert graph of the reaction.";
 
-Options[ShowVolpertGraph] := {ExternalSpecies->{}, PlotFunction->"GraphPlot", EdgeLabels -> False, Highlighted -> {}, Indexed -> False, Numbered -> False};
+Options[ShowVolpertGraph] := Join[
+  {PlotFunction->"GraphPlot", EdgeLabels -> False, Highlighted -> {}, Indexed -> False, Numbered -> False, GraphLayout->"BipartiteEmbedding"},
+  Options[ReactionsData],
+  Options[GraphPlot],
+  Options[LayeredGraphPlot],
+  Options[GraphPlot3d],
+  Options[TreePlot]
+ ];
 
 ShowVolpertGraph::badarg = "Illegal argument of function ShowVolpertGraph.";
 ShowVolpertGraph::funcarg = "Argument `1` is not a valid graph plot function. Try Graph, \
 GraphPlot, GraphPlot3D, LayeredGraphPlot or TreePlot.";
 
-ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
+ShowVolpertGraph[{reactions__},opts:OptionsPattern[]] :=
 	Module[{
-			fullopts, graphfunc, exps, vgp, vindices, vtempind,
+			graphfunc, vgp, vindices, vtempind,
 			vg, vind, complx, numbd, ind, initsp, highlighted, edgelabels,
-			nopts, g, bipd, fhj, sp, m, r
+			nopts, g, bipd, fhj, species, m, r
 		   },
 
-		fullopts = Join[{opts},Options[ShowVolpertGraph]];
-		graphfunc = PlotFunction /. FilterRules[fullopts, PlotFunction];
+		graphfunc = OptionValue[PlotFunction];
 
 		If[GraphPlotFunction2Q[graphfunc],
 
-			exps = FilterRules[{opts}, ExternalSpecies];
-			vgp = Check[ReactionsData[{reactions},exps]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			vgp = Check[ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[ vgp === $Failed, Return[$Failed];, {vg, vind} = vgp;];
 
-			highlighted = Flatten[{Highlighted /. FilterRules[fullopts, Highlighted]}]; (*ToCanonicalForm*)
+			highlighted = OptionValue[Highlighted]; (*ToCanonicalForm*)
 
-			ind = Indexed /. FilterRules[fullopts, Indexed];
-			sp = ReactionsData[{reactions},exps]["species"];
-			initsp = Intersection[Flatten[{ind}],sp];
+			ind = OptionValue[Indexed];
+			species = ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["species"];
+			initsp = Intersection[Flatten[{ind}],species];
 			If[ ind =!= False,
 				vindices = VolpertIndexing[{reactions},initsp] /. Rule[x_,y_] :> Rule[x,{x,y}];
 
@@ -788,13 +800,13 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 				(*If[Head[#]===RightArrow, {#, # /. Last[vindices]}, {#, # /. First[vindices]}] &/@ highlight;*)
 			];
 
-			numbd = (Numbered /. FilterRules[fullopts, Numbered]) === True;
+			numbd = OptionValue[Numbered] === True;
 			If[ numbd,
 					vg = vg /. vind;
 					highlighted = highlighted /. vind;
 			];
 
-			edgelabels = (EdgeLabels /. FilterRules[fullopts, EdgeLabels]) === True;
+			edgelabels = OptionValue[EdgeLabels] === True;
 
 			If[ highlighted =!= {},
 
@@ -802,7 +814,7 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 				(*ez itt erzeketlen a plotfunction-ra es a bipartite-re*)
 				g = Graph[vg];
 				highlighted = Subgraph[g,highlighted];
-				HighlightGraph[g, highlighted, FilterRules[{opts},Options[HighlightGraph]]],
+				HighlightGraph[g, highlighted, FilterRules[opts,Options[HighlightGraph]]],
 
 				nopts = FilterRules[{opts},Options[ToExpression[graphfunc]]];
 				Switch[graphfunc,
@@ -811,16 +823,16 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 							(*ez meg itt erzeketlen a bipartite-re*)
 							Graph[vg, nopts],
 						_,
-							bipd = (GraphLayout /. FilterRules[fullopts, GraphLayout]) === "Bipartite";
+							bipd = OptionValue[GraphLayout] === "BipartiteEmbedding";
 							nopts = Join[(FilterRules[nopts, EdgeLabeling] /. {}->{EdgeLabeling->False}), nopts];
 							If[ edgelabels, nopts = Join[{EdgeLabeling -> True}, nopts]; ];
 							If[ bipd,
-								fhj = ReactionsData[{reactions},exps]["fhjgraphedges"] /. Rule->RightArrow;
-								{m, r} = ReactionsData[{reactions},exps]["M","R"];
-								complx = ReactionsData[{reactions},exps]["complexes"];
-								If[MemberQ[complx,"0"], sp = Append[sp, "0"]; m = m+1;];
+								fhj = ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["fhjgraphedges"] /. Rule->RightArrow;
+								{m, r} = ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["M","R"];
+								complx = ReactionsData[{reactions},FilterRules[opts, Options[ReactionsData]]]["complexes"];
+								If[MemberQ[complx,"0"], species = Append[species, "0"]; m = m+1;];
 								If[ ind =!= False,
-									sp = sp /. Flatten[vindices];
+									species = species /. Flatten[vindices];
 									fhj = fhj /. Flatten[vindices];
 								];
 								If[ numbd, fhj = fhj /. vind;];
@@ -835,7 +847,7 @@ ShowVolpertGraph[{reactions__},opts___?OptionQ] :=
 										]&),
 									VertexCoordinateRules ->
 										Join[
-											Table[(sp[[i]])->{0,i},{i,1,m,1}],Table[(fhj[[i]])->{Ceiling[Min[{m,r}]/2],i},{i,1,r,1}]
+											Table[(species[[i]])->{0,i},{i,1,m,1}],Table[(fhj[[i]])->{Ceiling[Min[{m,r}]/2],i},{i,1,r,1}]
 										], nopts
 								],
 								ToExpression[graphfunc][vg, nopts]
@@ -857,7 +869,7 @@ AcyclicVolpertGraphQ::badarg = "Illegal argument of function AcyclicVolpertGraph
 Options[AcyclicVolpertGraphQ] := Options[ReactionsData];
 
 AcyclicVolpertGraphQ[{reactions__}, opts:OptionsPattern[]] :=
-	AcyclicGraphQ[Graph[First/@First[Check[ReactionsData[{reactions},opts]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]]]];
+	AcyclicGraphQ[Graph[First/@First[Check[ReactionsData[{reactions},FilterRules[opts,Options[ReactionsData]]]["volpertgraph"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}]]]];
 
 AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
 
@@ -885,8 +897,9 @@ ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of th
  the index of its linkage class in WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
 
 ShowSCLGraph::badarg = "Illegal argument of function ShowSCLGraph.";
+Options[ShowSCLGraph] = Options[GraphPlot];
 
-ShowSCLGraph[reactionData_,opts___?OptionQ]:= GraphPlot[SCLGraph[reactionData,opts], FilterRules[opts, Options[GraphPlot]], GraphLayout->"BipartiteEmbedding"];
+ShowSCLGraph[reactionData_,opts:OptionsPattern[]]:= GraphPlot[SCLGraph[reactionData,opts], FilterRules[opts, Options[GraphPlot]], GraphLayout->"BipartiteEmbedding"];
 
 
 (* ::Subsubsection::Closed:: *)
