@@ -774,7 +774,7 @@ Options[ShowVolpertGraph] := Join[
   Options[ReactionsData],
   Options[GraphPlot],
   Options[LayeredGraphPlot],
-  Options[GraphPlot3d],
+  Options[GraphPlot3D],
   Options[TreePlot]
  ];
 
@@ -901,7 +901,9 @@ AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
 ShowSCLGraph::usage = "Given a reactionData returns the SCL graph of the mechanism. The linkage classes are denoted by \!\(\*SubscriptBox[\(L\), \(i\)]\) where i is theindex of the linkage class in\
  WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
 
-SCLGraph[reactionData_,opts___?OptionQ] :=
+Options[SCLGraph] = Options[ReactionsData];
+ShowSCLGraph[{reactions__},opts:OptionsPattern[]]:= SCLGraph[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]];
+SCLGraph[reactionData_] :=
  Block[{linkageClasses = WeaklyConnectedGraphComponents[Graph[reactionData["fhjgraphedges"]]],species=reactionData["species"],edges, edgeLabels},
  {edges, edgeLabels} = Flatten[
          Function[complex, Function[species,{#[[1]]->species,complex}] /@ complextospecies[complex]]
@@ -917,9 +919,10 @@ ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of th
  the index of its linkage class in WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
 
 ShowSCLGraph::badarg = "Illegal argument of function ShowSCLGraph.";
-Options[ShowSCLGraph] = Options[GraphPlot];
+Options[ShowSCLGraph] = Join[Options[ReactionsData],Options[GraphPlot]];
 ShowSCLGraph[reactionData_]:=ShowSCLGraph[reactionData,GraphLayout->"BipartiteEmbedding"];
-ShowSCLGraph[reactionData_,opts:OptionsPattern[]]:= GraphPlot[SCLGraph[reactionData,opts], FilterRules[{opts}, Options[GraphPlot]], GraphLayout->"BipartiteEmbedding"];
+ShowSCLGraph[{reactions__},opts:OptionsPattern[]]:= ShowSCLGraph[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]],opts];
+ShowSCLGraph[reactionData_,opts:OptionsPattern[]]:= GraphPlot[SCLGraph[reactionData], FilterRules[{opts}, Options[GraphPlot]], GraphLayout->"BipartiteEmbedding"];
 
 
 (* ::Subsubsection::Closed:: *)
