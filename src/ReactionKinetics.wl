@@ -1663,9 +1663,9 @@ CoveringDecompositionSet::badmeth = "The given method cannot be recognized. Try 
 CoveringDecompositionSet::nulldecomp = "Overall reaction contains a species which is not among those of the given reaction steps.";
 CoveringDecompositionSet::isnotoverall = "The overal reaction has to be a single reaction step.";
 
-Options[CoveringDecompositionSet] = {ObjectiveFunction -> GreedySelection, Verbose -> True}
+Options[CoveringDecompositionSet] = Join[{ObjectiveFunction -> GreedySelection, Verbose -> True},Options[ReactionsData]];
 
-CoveringDecompositionSet[{overallreaction_?OverallQ},{reactions__},opts___?OptionQ] :=
+CoveringDecompositionSet[{overallreaction_?OverallQ},{reactions__},opts:OptionsPattern[]] :=
 	Module[{elemgamma, elemspecs, overallgamma, overallspecs, orderelem, ordercompl, steps, overall},
 
 		{overallgamma, overallspecs} = Check[ReactionsData[Flatten[{overallreaction}],MyFilterOptions[ReactionsData,opts]]["\[Gamma]","species"],Return[$Failed],
@@ -1687,10 +1687,10 @@ CoveringDecompositionSet[{overallreaction_?OverallQ},{reactions__},opts___?Optio
 
 	];
 
-CoveringDecompositionSet[overall_?ReactionQ, steps_?MatrixQ, opts___?OptionQ] :=
+CoveringDecompositionSet[overall_?ReactionQ, steps_?MatrixQ, opts:OptionsPattern[]] :=
 	Module[{$Messages,
-			verbose = Verbose /. Flatten[{opts, Options[CoveringDecompositionSet]}],
-			objective = ObjectiveFunction /. Flatten[{opts, Options[CoveringDecompositionSet]}],
+			verbose = OptionValue[Verbose],
+			objective = OptionValue[ObjectiveFunction],
 			reactions,
 			markedspecies = Array[1 &, Length[First[steps]]],
 			decompositions = {},
@@ -1740,62 +1740,6 @@ CoveringDecompositionSet[overall_?ReactionQ, steps_?MatrixQ, opts___?OptionQ] :=
 
 ];
 
-ReactionKinetics`ElementaryReactions::usage = "ElementaryReactions[species,maxproduct,options] computes every possible \
-elementary steps among the species having at most maxproduct products. \
-The second argument is optional, its default value is Infinity.\n\
-ElementaryReactions[atommatrix,maxproduct,options] does the same from the atomic matrix given by atommatrix. \
-This latter returns the transpose of the stoichiometric matrix \[Gamma] of the possible elementary reaction steps.";
-
-ElementaryReactions::badarg = "Illegal argument of function ElementaryReactions.";
-
-Options[ElementaryReactions] = {Verbose -> True}
-
-ElementaryReactions[species_?VectorQ, maxlen : (_Integer?Positive | Infinity) : Infinity, opts___?OptionQ] :=
-	Module[{headers, atomm, elemgamma},
-		{headers,atomm} = Check[ToAtomMatrix[species,FormattedOutput->False],Return[$Failed];,{ToAtomMatrix::badarg}];
-		elemgamma = Check[Transpose[ElementaryReactions[atomm,maxlen,opts]],Return[$Failed];,{ElementaryReactions::badarg}];
-
-		FromStoichiometry[NegativePart[elemgamma],PositivePart[elemgamma],species]
-];
-
-ElementaryReactions[atomm_?MatrixQ, maxlen : (_Integer?Positive | Infinity) : Infinity, opts___?OptionQ] :=
-	Module[{$Messages, verbose = Verbose /. Flatten[{opts, Options[ElementaryReactions]}],
-		molec, others, reac, i, j, atommatrix, fda, monitorf, monitormsg = "Working...", casesdone},
-
-		atommatrix = Transpose[atomm];
-		fda = First[Dimensions[atommatrix]];
-
-		monitorf := Join[
-			Flatten[
-				Table[
-					molec = atommatrix[[i]];
-					casesdone = 2*i;
-	    			others = Delete[atommatrix, {{i}}];
-	    			{
-						Insert[#, -1, {{i}}] & /@ Decompositions[  molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]],
-						Insert[#, -2, {{i}}] & /@ Decompositions[2 molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]]
-    				},
-					{i, fda}
-				],
-				2
-			],
-			Flatten[
-				Table[
-    				molec = atommatrix[[i]] + atommatrix[[j]];
-					casesdone = -1 + fda - i/2 + fda*i - i^2/2 + j;
-	    			others = Delete[atommatrix, {{i}, {j}}];
-					Insert[#, -1, {{i}, {j-1}}] & /@ Decompositions[molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]]
-    				,
-	    			{i, fda-1}, {j, i+1, fda}
-    			],
-    			2
-    		]
-    	];
-		If[verbose, Monitor[monitorf, ToString[IntegerPart[100.*casesdone/((fda*(3 + fda))/2)]]<>"% done"], monitorf]
-    ];
-
-ElementaryReactions[___] := (Message[ElementaryReactions::badarg]; $Failed)
-
 
 ReactionKinetics`Obligatory::usage = "Obligatory[overall,gamma] selects those reaction steps from gamma \
 which are provably contained in each decomposition of the overall reaction into reaction steps. \
@@ -1822,8 +1766,9 @@ ReactionKinetics`Omittable::usage = "Omittable[overall,gamma,options] selects th
 which can be omitted from the decompisitions of the overall reaction into reaction steps.";
 
 Omittable::badarg = "Illegal argument of function Omittable.";
+Options[Omittable] = Options[CoveringDecompositionSet];
 
-Omittable[overall_?ReactionQ, reactions_?MatrixQ, opts___?OptionQ] :=
+Omittable[overall_?ReactionQ, reactions_?MatrixQ, opts:OptionsPattern[]] :=
 	Complement[
 		Range[Length[First[reactions]]],
 		Union[Last /@ Position[CoveringDecompositionSet[overall, reactions, MyFilterOptions[CoveringDecompositionSet,opts]], _?Positive]]
@@ -1850,7 +1795,7 @@ SelectMinimalDecompositions[___] := (Message[SelectMinimalDecompositions::badarg
 
 Options[CDPartitions] = {Verbose -> True, Filter -> MinimalDecompositions}
 
-CDPartitions[overall_?ReactionQ, steps : {__?ReactionQ}, stepno_, opts___?OptionQ] :=
+CDPartitions[overall_?ReactionQ, steps : {__?ReactionQ}, stepno_, opts:OptionsPattern[]] :=
 	Module[
 		{verbose, filter,
 		 vecs = Append[steps, -overall],
@@ -1861,7 +1806,7 @@ CDPartitions[overall_?ReactionQ, steps : {__?ReactionQ}, stepno_, opts___?Option
 		 x, verboseStepnum = 0, verboseMaxdepth = 0,
 		 monitormsg = "Working...", monitorf},
 
-		{verbose, filter} = {Verbose, Filter} /. Flatten[{opts, Options[Decompositions]}];
+		{verbose, filter} = {OptionValue[Verbose], OptionValue[Filter]};
 		If[filter === All, Message[Decompositions::cdwall]; Return[$Failed]];
 
 		stack = Array[
@@ -1924,10 +1869,10 @@ UnrestrictedSolutions[m_?MatrixQ, b_List] :=
 
 Options[LPPartitions] = {Filter -> All, Preprocess -> False, Verbose -> True}
 
-LPPartitions[overall_?ReactionQ, steps : {__?ReactionQ}, maxlen_, opts___?OptionQ] :=
+LPPartitions[overall_?ReactionQ, steps : {__?ReactionQ}, maxlen_, opts:OptionsPattern[]] :=
 	Block[{verbose, filter, preprocess, generalsol, vars, solvedLPs = 0, constraints},
 
-		{verbose, filter, preprocess} = {Verbose, Filter, Preprocess} /. Flatten[{opts, Options[LPPartitions]}];
+		{verbose, filter, preprocess} = {OptionValue[Verbose], OptionValue[Filter], OptionValue[Preprocess]};
 
 		If[maxlen === Infinity,
 			If[Circular[overall, steps] && filter === All, Message[Decompositions::unbnd]; Return[$Failed]];
@@ -2172,7 +2117,6 @@ FindAllSolutions[conlist_List, vars : {var_, restvars___}] :=
 		] (* If lower *)
 	]; (* Module *)
 
-(* ----------------------------------------------------------------------------------------------------- *)
 
 ReactionKinetics`Decompositions::usage = "Decompositions[overallreaction,reactionsteps,maxlen,options] gives the decompositions of the overall \
 reaction into the reaction steps. Note that Decompositions deletes autocatalytic steps of the reaction.\n\
@@ -2192,7 +2136,7 @@ Decompositions::args = "One of the arguments has wrong shape.";
 Decompositions::nulldecomp = "Overall reaction contains a species which is not among those of the given reaction steps.";
 Decompositions::isnotoverall = "The overal reaction has to be a single reaction step.";
 
-Options[Decompositions] = {Filter->MinimalDecompositions,Method->ContejeanDevie,Preprocess->True,Verbose->True}
+Options[Decompositions] = Join[{Filter->MinimalDecompositions,Method->ContejeanDevie,Preprocess->True,Verbose->True}, Options[ReactionsData],Options[LPPartitions],Options[CDPartitions]];
 (*Filter\[Rule]All*)
 
 OverallQ := MemberQ[{Rule,
@@ -2202,7 +2146,7 @@ OverallQ := MemberQ[{Rule,
 		DoubleLeftArrow,DoubleLongLeftArrow}, Head[#]]&;
 
 Decompositions[{overallreaction_?OverallQ},{reactions__},
-			   maxlen : (_Integer?Positive | Infinity) : Infinity,opts___?OptionQ] :=
+			   maxlen : (_Integer?Positive | Infinity) : Infinity,opts:OptionsPattern[]] :=
 	Module[{elemgamma, elemspecs, overallgamma, overallspecs, orderelem, ordercompl, steps, overall},
 
 		{overallgamma, overallspecs} = Check[ReactionsData[Flatten[{overallreaction}],MyFilterOptions[ReactionsData,opts]]["\[Gamma]","species"],Return[$Failed],
@@ -2225,7 +2169,7 @@ Decompositions[{overallreaction_?OverallQ},{reactions__},
 	];
 
 Decompositions[overall_?ReactionQ, steps : {__?ReactionQ},
-			   maxlen : (_Integer?Positive | Infinity) : Infinity, opts___?OptionQ] :=
+			   maxlen : (_Integer?Positive | Infinity) : Infinity, opts:OptionsPattern[]] :=
 	Module[{method, $RecursionLimit = Infinity, stepstr},
 		If[Not[VectorQ[overall]]||Length[overall]=!=Length[steps]||Not[MatrixQ[steps]],Message[Decompositions::args]; Return[$Failed];];
 
@@ -2240,6 +2184,63 @@ Decompositions[overall_?ReactionQ, steps : {__?ReactionQ},
     ];
 
 Decompositions[___] := (Message[Decompositions::badarg]; Return[$Failed];)
+
+
+ReactionKinetics`ElementaryReactions::usage = "ElementaryReactions[species,maxproduct,options] computes every possible \
+elementary steps among the species having at most maxproduct products. \
+The second argument is optional, its default value is Infinity.\n\
+ElementaryReactions[atommatrix,maxproduct,options] does the same from the atomic matrix given by atommatrix. \
+This latter returns the transpose of the stoichiometric matrix \[Gamma] of the possible elementary reaction steps.";
+
+ElementaryReactions::badarg = "Illegal argument of function ElementaryReactions.";
+
+Options[ElementaryReactions] = Join[{Verbose -> True},Options[Decompositions]];
+
+ElementaryReactions[species_?VectorQ, maxlen : (_Integer?Positive | Infinity) : Infinity, opts:OptionsPattern[]] :=
+	Module[{headers, atomm, elemgamma},
+		{headers,atomm} = Check[ToAtomMatrix[species,FormattedOutput->False],Return[$Failed];,{ToAtomMatrix::badarg}];
+		elemgamma = Check[Transpose[ElementaryReactions[atomm,maxlen,opts]],Return[$Failed];,{ElementaryReactions::badarg}];
+
+		FromStoichiometry[NegativePart[elemgamma],PositivePart[elemgamma],species]
+];
+
+ElementaryReactions[atomm_?MatrixQ, maxlen : (_Integer?Positive | Infinity) : Infinity, opts:OptionsPattern[]] :=
+	Module[{$Messages, verbose = OptionValue[Verbose],
+		molec, others, reac, i, j, atommatrix, fda, monitorf, monitormsg = "Working...", casesdone},
+
+		atommatrix = Transpose[atomm];
+		fda = First[Dimensions[atommatrix]];
+
+		monitorf := Join[
+			Flatten[
+				Table[
+					molec = atommatrix[[i]];
+					casesdone = 2*i;
+	    			others = Delete[atommatrix, {{i}}];
+	    			{
+						Insert[#, -1, {{i}}] & /@ Decompositions[  molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]],
+						Insert[#, -2, {{i}}] & /@ Decompositions[2 molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]]
+    				},
+					{i, fda}
+				],
+				2
+			],
+			Flatten[
+				Table[
+    				molec = atommatrix[[i]] + atommatrix[[j]];
+					casesdone = -1 + fda - i/2 + fda*i - i^2/2 + j;
+	    			others = Delete[atommatrix, {{i}, {j}}];
+					Insert[#, -1, {{i}, {j-1}}] & /@ Decompositions[molec, Transpose[others], maxlen, Flatten[{Verbose -> False, MyFilterOptions[Decompositions, opts]}]]
+    				,
+	    			{i, fda-1}, {j, i+1, fda}
+    			],
+    			2
+    		]
+    	];
+		If[verbose, Monitor[monitorf, ToString[IntegerPart[100.*casesdone/((fda*(3 + fda))/2)]]<>"% done"], monitorf]
+    ];
+
+ElementaryReactions[___] := (Message[ElementaryReactions::badarg]; $Failed)
 
 
 (* ::Subsection::Closed:: *)
