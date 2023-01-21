@@ -89,7 +89,8 @@ ReactionsToList[{reactions__}]:=
 ];
 
 
-complextospecies[cplxs_] := DeleteDuplicates[
+ReactionKinetics`ComplexToSpecies::usage = "Get the set of species from a complex. The species must be in string form. Takes a single complex or a list of complexes";
+ComplexToSpecies[cplxs_] := DeleteDuplicates[
 								((Flatten[{cplxs} /. Plus:>List]
 										/. r_*A_?StringQ :> A /. A_?StringQ*r_ :> A)
 										/. r_*A_?SpeciesQ :> A /. A_?SpeciesQ*r_ :> A)
@@ -97,10 +98,13 @@ complextospecies[cplxs_] := DeleteDuplicates[
 							];
 									(*collect, symbolic coefficient, multip coeff*)
 									(*Union*)
-complextocoefflist[cplxs_] := Block[{spec},
-								spec = complextospecies[cplxs];
-								Thread[List[spec, Coefficient[cplxs, spec]]]
+ReactionKinetics`ComplexToCoefficientList::usage = "Get the list of species with their coefficient for each species found in the complex";
+ComplexToCoefficientList[cplx_] := Block[{spec},
+								spec = ComplexToSpecies[cplx];
+								Thread[List[spec, Coefficient[cplx, spec]]]
 							 ];
+ReactionKinetics`ComplexToCoefficientAssociation::usage = "Get the coefficients associated with each species in the complex";
+ComplexToCoefficientAssociation[cplx_] := Association[Rule@@@ComplexToCoefficientList[cplx]];
 subgraphedges[graph_,vtceslist_] :=
 			If[ Length[#] === 1, {{}, #}, Join[{EdgeList[Subgraph[graph, #]] /. DirectedEdge->Rule}, {#}]] & /@ vtceslist;
 
@@ -130,7 +134,7 @@ Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts
 					If[OptionValue[InternalSpecies]=!={},
 						Block[{allSpecies,allComplexes},
 							allComplexes = DeleteDuplicates[Flatten[reactionsteps /. RightArrow -> List]];
-							allSpecies=complextospecies[allComplexes] /. "0" -> Sequence[];
+							allSpecies=ComplexToSpecies[allComplexes] /. "0" -> Sequence[];
 							externals=Complement[allSpecies,OptionValue[InternalSpecies]]
 						],
 						externals=OptionValue[ExternalSpecies];
@@ -145,10 +149,10 @@ Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts
 
 				complexes = DeleteDuplicates[Flatten[internalReactionSteps /. RightArrow -> List]]; (*Sort*)
 
-				vgggraph = Flatten[(Thread /@ {#->complextocoefflist[Last[#]], complextocoefflist[First[#]]->#}) &/@ internalReactionSteps];
+				vgggraph = Flatten[(Thread /@ {#->ComplexToCoefficientList[Last[#]], ComplexToCoefficientList[First[#]]->#}) &/@ internalReactionSteps];
 				vgraph = vgggraph /. Rule[A_RightArrow,B_]:>{Rule[A, First[B]], Last[B]} /. Rule[A_,B_RightArrow]:>{Rule[First[A], B], Last[A]};
 
-				species = complextospecies[complexes] /. "0" -> Sequence[]; (*komplexek csak belso anyagfajta erejeig egyertelmuek*)
+				species = ComplexToSpecies[complexes] /. "0" -> Sequence[]; (*komplexek csak belso anyagfajta erejeig egyertelmuek*)
 
 				indexed = Flatten[MapIndexed[#1->First[#2]&, #]& /@ {species, internalReactionSteps}];
 
@@ -377,11 +381,11 @@ FilterReactions[{reactions__},specs_?VectorQ,opts : OptionsPattern[]]:=
 			If[ MemberQ[{"Reactant","Product","All"}, OptionValue[Side]],
 				Switch[OptionValue[Side],
 					"Reactant",
-						Flatten[If[Intersection[complextospecies[First[#]],specs]=!={}, #, {}] &/@ fhj],
+						Flatten[If[Intersection[ComplexToSpecies[First[#]],specs]=!={}, #, {}] &/@ fhj],
 					"Product",
-						Flatten[If[Intersection[complextospecies[Last[#]],specs]=!={}, #, {}] &/@ fhj],
+						Flatten[If[Intersection[ComplexToSpecies[Last[#]],specs]=!={}, #, {}] &/@ fhj],
 					"All",
-						Flatten[If[Intersection[complextospecies[# /. Rule -> Plus],specs]=!={}, #, {}] &/@ fhj]
+						Flatten[If[Intersection[ComplexToSpecies[# /. Rule -> Plus],specs]=!={}, #, {}] &/@ fhj]
 				],
 				Message[FilterReactions::"badopt"];
 				Return[$Failed]
@@ -565,7 +569,8 @@ ReactionKinetics`FHJGraph::usage = "FHJGraph[{reactions},options] returns the Fe
 of the reaction with options from ReactionsData.";
 Options[FHJGraph] = Options[ReactionsData];
 
-FHJGraph[{reactions__}, opts:OptionsPattern[]] := Graph[ReactionsData[{reactions}, FilterRules[{opts}, Options[ReactionsData]]]["fhjgraphedges"]]
+FHJGraph[{reactions__}, opts:OptionsPattern[]] := DirectedGraph[ReactionsData[{reactions}, FilterRules[{opts}, Options[ReactionsData]]]["fhjgraphedges"]]
+FHJGraph[reactionData_]:=DirectedGraph[reactionData["fhjgraphedges"]]
 
 
 GraphPlotFunctionQ := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlot3D","TreePlot"},#]&;
@@ -906,7 +911,7 @@ ShowSCLGraph[{reactions__},opts:OptionsPattern[]]:= SCLGraph[ReactionsData[{reac
 SCLGraph[reactionData_] :=
  Block[{linkageClasses = WeaklyConnectedGraphComponents[Graph[reactionData["fhjgraphedges"]]],species=reactionData["species"],edges, edgeLabels},
  {edges, edgeLabels} = Flatten[
-         Function[complex, Function[species,{#[[1]]->species,complex}] /@ complextospecies[complex]]
+         Function[complex, Function[species,{#[[1]]->species,complex}] /@ ComplexToSpecies[complex]]
          /@ DeleteDuplicates[Flatten[ReactionsToList[ToCanonicalForm[EdgeList[#[[2]]]]]/.RightArrow->List]] &
          /@ ({ Subscript["L", #]& /@ Range[Length[linkageClasses]],linkageClasses}//Transpose),
          2
