@@ -4,7 +4,7 @@
 (*ToCanonicalForm*)
 
 
-ToCanonicalForm::usage = "ToCanonicalForm[reactions] returns the canonical form of reactions \
+ReactionKinetics`ToCanonicalForm::usage = "ToCanonicalForm[reactions] returns the canonical form of reactions \
 using only right, left and left-right arrows.";
 ToCanonicalForm::badarg = "Illegal argument of function ToCanonicalForm.";
 
@@ -217,7 +217,7 @@ ReactionsForm[reactionlist_] :=
 	If[Length[Flatten[reactionlist]]<=2,ToString[reactionlist,StandardForm],"{"<>ToString[First[reactionlist],StandardForm]<>",...,"<>ToString[Last[reactionlist],StandardForm]<>"}"];
 
 
-ReactionsData::usage = "ReactionsData[{reactions},externalspecies] \
+ReactionKinetics`ReactionsData::usage = "ReactionsData[{reactions},externalspecies] \
 returns the most important characteristics of the set of reactions such as the species, number of species, \
 (possible) external species, complexes, number of complexes, (genuine) reaction steps, the edges of the Feinberg-Horn-Jackson (FHJ) graph, \
 weakly and strongly connected (terminal) components of the FHJ graph, Volpert graph, number of linkage classes, deficiency, \[Alpha], \[Beta] and \[Gamma], the order of the reaction steps. \
@@ -303,7 +303,7 @@ ReactionsData[___][___] := (Message[ReactionsData::"badarg"]; Return[$Failed])
 (*ToReversible, ReversibleFHJRepresentation, ReversibleQ, WeaklyReversibleQ*)
 
 
-ToReversible::usage = "ToReversible[reactions] make all the reaction steps of reactions reversible.";
+ReactionKinetics`ToReversible::usage = "ToReversible[reactions] make all the reaction steps of reactions reversible.";
 ToReversible::badarg = "Illegal argument of function ToReversible.";
 
 
@@ -312,7 +312,7 @@ ToReversible[reactions__] := ToCanonicalForm[reactions]/.RightArrow->Equilibrium
 ToReversible[___] := (Message[ToReversible::"badarg"]; $Failed)
 
 
-ReversibleFHJRepresentation::usage = "ReversibleFHJRepresentation[{reactions},options] results in the Feinberg-Horn-Jackson \
+ReactionKinetics`ReversibleFHJRepresentation::usage = "ReversibleFHJRepresentation[{reactions},options] results in the Feinberg-Horn-Jackson \
 graph making all its edges reversible.";
 ReversibleFHJRepresentation::badarg = "Illegal argument of function ReversibleFHJRepresentation.";
 
@@ -329,7 +329,7 @@ ReversibleFHJRepresentation[{reactions__},opts:OptionsPattern[]] :=
 ReversibleFHJRepresentation[___] := (Message[ReversibleFHJRepresentation::"badarg"]; $Failed)
 
 
-ReversibleQ::usage = "ReversibleQ[{reactions},options] yields True if and only if the reaction is reversible.";
+ReactionKinetics`ReversibleQ::usage = "ReversibleQ[{reactions},options] yields True if and only if the reaction is reversible.";
 ReversibleQ::badarg = "Illegal argument of function ReversibleQ.";
 
 
@@ -340,7 +340,7 @@ ReversibleQ[{reactions__},opts:OptionsPattern[]] :=
 ReversibleQ[___] := (Message[ReversibleQ::"badarg"]; $Failed)
 
 
-WeaklyReversibleQ::usage = "WeaklyReversibleQ[{reactions},options] yields True if and only if the reaction is weakly reversible.";
+ReactionKinetics`WeaklyReversibleQ::usage = "WeaklyReversibleQ[{reactions},options] yields True if and only if the reaction is weakly reversible.";
 WeaklyReversibleQ::badarg = "Illegal argument of function WeaklyReversibleQ.";
 
 
@@ -355,7 +355,7 @@ WeaklyReversibleQ[___] := (Message[WeaklyReversibleQ::"badarg"]; $Failed)
 (*FilterReactions, FromStoichiometry, DeleteAutocatalysis*)
 
 
-FilterReactions::usage = "FilterReactions[{reactions},species,options] filters all the reaction steps in which \
+ReactionKinetics`FilterReactions::usage = "FilterReactions[{reactions},species,options] filters all the reaction steps in which \
 the given set of species shows up as either reactant or product or (reactant or product) species. \
 This can be controlled by option Side \[Rule] \"Reactant\", \"Product\" or \"All\".";
 
@@ -394,7 +394,7 @@ FilterReactions[{reactions__},specs_?VectorQ,opts : OptionsPattern[]]:=
 FilterReactions[___][___] := (Message[FilterReactions::"badarg"]; $Failed)
 
 
-FromStoichiometry::usage = "FromStoichiometry[\[Alpha],\[Beta],species] builds up the set of reaction steps from the matrixes of stoichiometric coefficients \[Alpha] and \[Beta] \
+ReactionKinetics`FromStoichiometry::usage = "FromStoichiometry[\[Alpha],\[Beta],species] builds up the set of reaction steps from the matrixes of stoichiometric coefficients \[Alpha] and \[Beta] \
 using species. The species argument is optional.";
 
 FromStoichiometry::dimmx = "Matrixes \[Alpha] and \[Beta] must have the same size.";
@@ -426,7 +426,7 @@ FromStoichiometry[alpha_?MatrixQ,beta_?MatrixQ,specs_?VectorQ]:=
 FromStoichiometry[___][___] := (Message[FromStoichiometry::"badarg"]; $Failed)
 
 
-DeleteAutocatalysis::usage = "DeleteAutocatalysis[{reactions}] and DeleteAutocatalysis[\[Alpha],\[Beta],species] deletes the autocatalytic steps of the reaction.";
+ReactionKinetics`DeleteAutocatalysis::usage = "DeleteAutocatalysis[{reactions}] and DeleteAutocatalysis[\[Alpha],\[Beta],species] deletes the autocatalytic steps of the reaction.";
 
 DeleteAutocatalysis::dimmx = "Matrixes \[Alpha] and \[Beta] must have the same size.";
 DeleteAutocatalysis::vars = "The number of species does not match with the dimensions of \[Alpha] and \[Beta].";
@@ -473,7 +473,7 @@ DeleteAutocatalysis[___][___] := (Message[DeleteAutocatalysis::"badarg"]; $Faile
 (*MinFHJWeaklyConnectedComponents, MinFHJStronglyConnectedComponents, MaxFHJWeaklyConnectedComponents, MaxFHJStronglyConnectedComponents*)
 
 
-MinFHJWeaklyConnectedComponents::usage = "MinFHJWeaklyConnectedComponents[{reactions},options] returns the smallest weakly connected components of the given reaction.";
+ReactionKinetics`MinFHJWeaklyConnectedComponents::usage = "MinFHJWeaklyConnectedComponents[{reactions},options] returns the smallest weakly connected components of the given reaction.";
 
 Options[MinFHJWeaklyConnectedComponents] := Options[ReactionsData];
 
@@ -494,7 +494,7 @@ MinFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 MinFHJWeaklyConnectedComponents[___][___] := (Message[MinFHJWeaklyConnectedComponents::"badarg"]; $Failed)
 
 
-MinFHJStronglyConnectedComponents::usage = "MinFHJStronglyConnectedComponents[{reactions},options] returns the smallest strongly connected components of the given reaction.";
+ReactionKinetics`MinFHJStronglyConnectedComponents::usage = "MinFHJStronglyConnectedComponents[{reactions},options] returns the smallest strongly connected components of the given reaction.";
 
 Options[MinFHJStronglyConnectedComponents] := Options[ReactionsData];
 
@@ -515,7 +515,7 @@ MinFHJStronglyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 MinFHJStronglyConnectedComponents[___][___] := (Message[MinFHJStronglyConnectedComponents::"badarg"]; $Failed)
 
 
-MaxFHJWeaklyConnectedComponents::usage = "MaxFHJWeaklyConnectedComponents[{reactions},options] returns the largest weakly connected components of the given reaction.";
+ReactionKinetics`MaxFHJWeaklyConnectedComponents::usage = "MaxFHJWeaklyConnectedComponents[{reactions},options] returns the largest weakly connected components of the given reaction.";
 
 Options[MaxFHJWeaklyConnectedComponents] := Options[ReactionsData];
 
@@ -536,7 +536,7 @@ MaxFHJWeaklyConnectedComponents[{reactions__}, opts:OptionsPattern[]] :=
 MaxFHJWeaklyConnectedComponents[___][___] := (Message[MaxFHJWeaklyConnectedComponents::"badarg"]; $Failed)
 
 
-MaxFHJStronglyConnectedComponents::usage = "MaxFHJStronglyConnectedComponents[{reactions},options] returns the largest strongly connected components of the given reaction.";
+ReactionKinetics`MaxFHJStronglyConnectedComponents::usage = "MaxFHJStronglyConnectedComponents[{reactions},options] returns the largest strongly connected components of the given reaction.";
 
 Options[MaxFHJStronglyConnectedComponents] := Options[ReactionsData];
 
@@ -561,7 +561,7 @@ MaxFHJStronglyConnectedComponents[___][___] := (Message[MaxFHJStronglyConnectedC
 (*FHJGraph, ShowFHJGraph*)
 
 
-FHJGraph::usage = "FHJGraph[{reactions},options] returns the Feinberg-Horn-Jackson graph of the reaction \
+ReactionKinetics`FHJGraph::usage = "FHJGraph[{reactions},options] returns the Feinberg-Horn-Jackson graph of the reaction \
 of the reaction with options from ReactionsData.";
 Options[FHJGraph] = Options[ReactionsData];
 
@@ -571,7 +571,7 @@ FHJGraph[{reactions__}, opts:OptionsPattern[]] := Graph[ReactionsData[{reactions
 GraphPlotFunctionQ := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlot3D","TreePlot"},#]&;
 
 
-ShowFHJGraph::usage = "ShowFHJGraph[{reactions},rratecoeffs,options] displays the Feinberg-Horn-Jackson graph of the reaction \
+ReactionKinetics`ShowFHJGraph::usage = "ShowFHJGraph[{reactions},rratecoeffs,options] displays the Feinberg-Horn-Jackson graph of the reaction \
 with rratecoeffs as reaction rate coeffcients.";
 
 ShowFHJGraph::badarg = "Illegal argument of function ShowFHJGraph.";
@@ -674,7 +674,7 @@ ShowFHJGraph[___] := (Message[ShowFHJGraph::"badarg"]; $Failed)
 (*Volpertindexing, ShowVolpertGraph, AcyclicVolpertGraphQ, VolpertSpecies*)
 
 
-VolpertIndexing::usage = "VolpertIndexing[{reactions},initspecies,options] gives the Volpert indexes \
+ReactionKinetics`VolpertIndexing::usage = "VolpertIndexing[{reactions},initspecies,options] gives the Volpert indexes \
 of species and reactions of the given reaction with respect to the initial species given by initspecies.";
 
 VolpertIndexing::badarg = "Illegal argument of function VolpertIndexing.";
@@ -767,7 +767,7 @@ GraphPlotFunction2Q := MemberQ[{"Graph","GraphPlot","LayeredGraphPlot","GraphPlo
 (*"ShowGraph","ShowLabeledGraph"*)
 
 
-ShowVolpertGraph::usage = "ShowVolpertGraph[{reactions},options] visualizes the Volpert graph of the reaction.";
+ReactionKinetics`ShowVolpertGraph::usage = "ShowVolpertGraph[{reactions},options] visualizes the Volpert graph of the reaction.";
 
 Options[ShowVolpertGraph] := Join[
   {PlotFunction->"GraphPlot", EdgeLabels -> False, Highlighted -> {}, Indexed -> False, Numbered -> False, GraphLayout->"BipartiteEmbedding"},
@@ -882,7 +882,7 @@ ShowVolpertGraph[{reactions__},opts:OptionsPattern[]] :=
 ShowVolpertGraph[___] := (Message[ShowVolpertGraph::"badarg"]; $Failed)
 
 
-AcyclicVolpertGraphQ::usage = "AcyclicVolpertGraphQ[reactions,options] checks whether the volpert graph of the reaction is acyclic.";
+ReactionKinetics`AcyclicVolpertGraphQ::usage = "AcyclicVolpertGraphQ[reactions,options] checks whether the volpert graph of the reaction is acyclic.";
 
 AcyclicVolpertGraphQ::badarg = "Illegal argument of function AcyclicVolpertGraphQ.";
 
@@ -898,7 +898,7 @@ AcyclicVolpertGraphQ[___] := (Message[AcyclicVolpertGraphQ::"badarg"]; $Failed)
 (*SCLGraph, ShowSCLGraph*)
 
 
-ShowSCLGraph::usage = "Given a reactionData returns the SCL graph of the mechanism. The linkage classes are denoted by \!\(\*SubscriptBox[\(L\), \(i\)]\) where i is theindex of the linkage class in\
+ReactionKinetics`ShowSCLGraph::usage = "Given a reactionData returns the SCL graph of the mechanism. The linkage classes are denoted by \!\(\*SubscriptBox[\(L\), \(i\)]\) where i is theindex of the linkage class in\
  WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
 
 Options[SCLGraph] = Options[ReactionsData];
@@ -915,7 +915,7 @@ SCLGraph[reactionData_] :=
 ]
 
 
-ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of the mechanism. The linkage classes are denoted by numbers. The number of a vertex represents\
+ReactionKinetics`ShowSCLGraph::usage = "Given a ReactionData[reactions] draws the SCL graph of the mechanism. The linkage classes are denoted by numbers. The number of a vertex represents\
  the index of its linkage class in WeaklyConnectedGraphComponents[reactionData[\"fhjgraphedges\"]]";
 
 ShowSCLGraph::badarg = "Illegal argument of function ShowSCLGraph.";
@@ -929,7 +929,7 @@ ShowSCLGraph[reactionData_,opts:OptionsPattern[]]:= GraphPlot[SCLGraph[reactionD
 (*Atoms, ToAtomMatrix, AtomConservingQ, FromAtomMatrix*)
 
 
-Atoms::usage = "Atoms returns the list of atoms from Ac through Uuh to Y.";
+ReactionKinetics`Atoms::usage = "Atoms returns the list of atoms from Ac through Uuh to Y.";
 
 Atoms =
 	{
@@ -953,7 +953,7 @@ MoleculeToAtoms[s_?StringQ,ats_?VectorQ]:=
 				Overlaps->False];
 
 
-ToAtomMatrix::usage = "ToAtomMatrix[molecules,options] constructs the atomic matrix using the molecular structure of the species. \
+ReactionKinetics`ToAtomMatrix::usage = "ToAtomMatrix[molecules,options] constructs the atomic matrix using the molecular structure of the species. \
 It prints a table if the option FormattedOutput is set to be True.";
 (*Checks if the atoms are conserved in the reaction steps and list those steps where they are not*)
 
@@ -980,7 +980,7 @@ ToAtomMatrix[molecules_?VectorQ,opts___?OptionQ]:=
 ToAtomMatrix[___] := (Message[ToAtomMatrix::"badarg"]; $Failed)
 
 
-AtomConservingQ::usage = "AtomConservingQ[{reactions},options] returns True if and only if the \
+ReactionKinetics`AtomConservingQ::usage = "AtomConservingQ[{reactions},options] returns True if and only if the \
 number of atoms together with the charges is conserved in each reaction step.";
 
 AtomConservingQ::badarg = "Illegal argument of function AtomConservingQ.";
@@ -1002,7 +1002,7 @@ AtomConservingQ[{reactions__},opts:OptionsPattern[]] :=
 AtomConservingQ[___] := (Message[AtomConservingQ::"badarg"]; $Failed)
 
 
-AtomsQ::usage = "AtomsQ[list] returns True if and only if each element of list is an atom \
+ReactionKinetics`AtomsQ::usage = "AtomsQ[list] returns True if and only if each element of list is an atom \
 listed in Atoms.";
 
 AtomsQ::badarg = "Illegal argument of function AtomsQ.";
@@ -1014,7 +1014,7 @@ AtomsQ[v_?VectorQ] := And@@(MemberQ[Atoms,#]&/@v);
 AtomsQ[___] := (Message[AtomsQ::"badarg"]; $Failed)
 
 
-FromAtomMatrix::usage = "FromAtomMatrix[atommatrix,atoms] constructs the molecular structure from an atomic matrix using the atoms.";
+ReactionKinetics`FromAtomMatrix::usage = "FromAtomMatrix[atommatrix,atoms] constructs the molecular structure from an atomic matrix using the atoms.";
 
 FromAtomMatrix::badarg = "Illegal argument of function FromAtomMatrix.";
 
@@ -1056,7 +1056,7 @@ MST[e_List,n_Integer]:=
 	];
 
 
-DetailedBalanced::usage = "DetailedBalanced[{reactions},rrcoeffs,options] gives the necessary and sufficient conditions \
+ReactionKinetics`DetailedBalanced::usage = "DetailedBalanced[{reactions},rrcoeffs,options] gives the necessary and sufficient conditions \
 for the given reaction to be detailed balanced using rrcoeffs as reaction rate coefficients.";
 
 DetailedBalanced::badarg = "Illegal argument of function DetailedBalanced.";

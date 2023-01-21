@@ -113,26 +113,20 @@ If[$VersionNumber < 8,
 ];
 
 
-Unprotect[
-	$ReactionKinetics,
-	$ReactionKineticsPackageLoaded,
-	$ReactionKineticsVersionNumber
-];
-
-
 (* ================================================================ *)
 (* usage messages for the exported functions and the context itself *)
 (* ================================================================ *)
 
 
-$ReactionKinetics::usage = "ReactionKinetics.m is a Mathematica package that is no doubt the nicest package ever created to help you do fine reaction kinetics.";
+ReactionKinetics`$ReactionKinetics::usage = "ReactionKinetics.m is a Mathematica package that is no doubt the nicest package ever created to help you do fine reaction kinetics.";
 
-$ReactionKineticsVersionNumber::usage = "$ReactionKineticsVersion returns the version number and release date of the package which is currently being used.";
+ReactionKinetics`$ReactionKineticsVersionNumber::usage = "$ReactionKineticsVersion returns the version number and release date of the package which is currently being used.";
 
-$ReactionKineticsPackageLoaded::usage = "$ReactionKineticsPackageLoaded returns true if the current version of ReactionKinetics is loaded.";
+ReactionKinetics`$ReactionKineticsPackageLoaded::usage = "$ReactionKineticsPackageLoaded returns true if the current version of ReactionKinetics is loaded.";
 
 
 $ReactionKineticsVersionNumber = "1.0 [March 25, 2018]";
+$ReactionKineticsPackageLoaded = False;
 
 
 (* ::Subsection::Closed:: *)
@@ -150,55 +144,55 @@ Begin["`Private`"]
 (*Options*)
 
 
-Bipartite::usage = "An option for function ShowVolpertGraph. Bipartite \[Rule] True arranges the vertices of the (bipartite) Volpert graph \
+ReactionKinetics`Bipartite::usage = "An option for function ShowVolpertGraph. Bipartite \[Rule] True arranges the vertices of the (bipartite) Volpert graph \
 into two disjoint sets (of reaction steps and species) higlighting the edges connecting them.";
-CombinatorialMoments::usage = "An option for function MomentEquations. If CombinatorialMoments \[Rule] True, then combinatorial moments are taken into account.";
-ComplexColors::usage = "An option for function ShowFHJGraph. E.g. ComplexColors \[Rule] listcolors colors the complexes (i.e. edges) of the FHJ graph according to listcolors.";
-Conditions::usage = "An option for function StationaryPoints. E.g. Conditions \[Rule] list adds the list to the constraints stationary points should obey.";
-ContejeanDevie::usage = "Method \[Rule] ContejeanDevie is an option for Decompositions for decomposing an overall reaction.";
+ReactionKinetics`CombinatorialMoments::usage = "An option for function MomentEquations. If CombinatorialMoments \[Rule] True, then combinatorial moments are taken into account.";
+ReactionKinetics`ComplexColors::usage = "An option for function ShowFHJGraph. E.g. ComplexColors \[Rule] listcolors colors the complexes (i.e. edges) of the FHJ graph according to listcolors.";
+ReactionKinetics`Conditions::usage = "An option for function StationaryPoints. E.g. Conditions \[Rule] list adds the list to the constraints stationary points should obey.";
+ReactionKinetics`ContejeanDevie::usage = "Method \[Rule] ContejeanDevie is an option for Decompositions for decomposing an overall reaction.";
 EdgeLabels::usage = "An option for function ShowVolpertGraph. If EdgeLabels \[Rule] True, all the stoichiometric coefficients are put \
 on the directed edges of the Volpert graph.";
-ExternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
+ReactionKinetics`ExternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
 The list of external species of a reaction can be given by ExternalSpecies \[Rule] listexternals.";
-FastSelection::usage = "ObjectiveFunction \[Rule] FastSelection is an option for \
+ReactionKinetics`FastSelection::usage = "ObjectiveFunction \[Rule] FastSelection is an option for \
 CoveringDecompositionSet to specify how the consecutive decompositions should be searched for.";
-Filter::usage = "An option for function Decompositions. E.g. Filter \[Rule] MinimalDecompositions filters out minimal decompositions.";
-FixedStepSize::usage = "An option for function Simulation (see approximation methods).";
-FormattedOutput::usage = "An option for function ToAtomMatrix. FormattedOutput \[Rule] True pretty prints a table for atomic matrix.";
-GeneratedRateCoefficient::usage = "An option for function DetailedBalanced. GeneratedRateCoefficient \[Rule] rratecoeffs uses rratecoeffs as reaction rate coefficients.";
-GreedySelection::usage = "ObjectiveFunction \[Rule] GreedySelection is an option for \
+ReactionKinetics`Filter::usage = "An option for function Decompositions. E.g. Filter \[Rule] MinimalDecompositions filters out minimal decompositions.";
+ReactionKinetics`FixedStepSize::usage = "An option for function Simulation (see approximation methods).";
+ReactionKinetics`FormattedOutput::usage = "An option for function ToAtomMatrix. FormattedOutput \[Rule] True pretty prints a table for atomic matrix.";
+ReactionKinetics`GeneratedRateCoefficient::usage = "An option for function DetailedBalanced. GeneratedRateCoefficient \[Rule] rratecoeffs uses rratecoeffs as reaction rate coefficients.";
+ReactionKinetics`GreedySelection::usage = "ObjectiveFunction \[Rule] GreedySelection is an option for \
 CoveringDecompositionSet to specify how the consecutive decompositions should be searched for.";
-Highlight::usage = "An option for function ShowVolpertGraph. Highlight \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices \
+ReactionKinetics`Highlight::usage = "An option for function ShowVolpertGraph. Highlight \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices \
 depending on SubgraphHighlight \[Rule] False or True.";
 Highlighted::usage = "An option for function ShowVolpertGraph. Highlighted \[Rule] listvertices highlists the vertices or the subgraph induced by vertices listed in listvertices.";
 Indexed::usage = "An option for function ShowVolpertGraph. Indexed \[Rule] listspecies displays the Volpert graph with Volpert indexes, \
 where listspecies is considered as the initial set of species.";
-InternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
+ReactionKinetics`InternalSpecies::usage = "An option for several functions including e.g. ReactionsData, ShowFHJGraph, Concentrations, Simulation, Decompositions etc. \
 The list of internal species of a reaction can be given by InternalSpecies \[Rule] listinternals. Only one of ExternalSpecies or InternalSpecies can be present";
-LPBased::usage = "Method \[Rule] LPBased is an option for Decompositions using linear programming to obtain decompositions for an overall reaction.";
-MassAction::usage = "An option for functions RightHandSide, DeterministicModel, Concentrations, StationaryPoints and EigensystemJacobian. When \
+ReactionKinetics`LPBased::usage = "Method \[Rule] LPBased is an option for Decompositions using linear programming to obtain decompositions for an overall reaction.";
+ReactionKinetics`MassAction::usage = "An option for functions RightHandSide, DeterministicModel, Concentrations, StationaryPoints and EigensystemJacobian. When \
 MassAction \[Rule] True, mass action type kinetics are taken into account with reaction rate coefficients.";
-MaxIteration::usage = "An option for function Simulation. It specifies the maximum number of iterations that should be used during the simulation.";
-Memo::usage = "An option for function CHEMKINImport. Memo \[Rule] True forces CHEMKINImport to use memorization i.e. to remember outputs of already given inputs.";
+ReactionKinetics`MaxIteration::usage = "An option for function Simulation. It specifies the maximum number of iterations that should be used during the simulation.";
+ReactionKinetics`Memo::usage = "An option for function CHEMKINImport. Memo \[Rule] True forces CHEMKINImport to use memorization i.e. to remember outputs of already given inputs.";
 Method::usage = "Method \[Rule] method is an option for several functions letting method be used during the calculation.";
-MinimalDecompositions::usage = "An option for function Decompositions, e.g. Filter \[Rule] MinimalDecompositions.";
-Numbered::usage = "An option for functions ShowFHJGraph and ShowVolpertGraph. \
+ReactionKinetics`MinimalDecompositions::usage = "An option for function Decompositions, e.g. Filter \[Rule] MinimalDecompositions.";
+ReactionKinetics`Numbered::usage = "An option for functions ShowFHJGraph and ShowVolpertGraph. \
 Numbered \[Rule] True only shows the graphs with numbers assigned to each reaction step.";
-ObjectiveFunction::usage = "An option for function Decompositions, e.g. ObjectiveFunction \[Rule] OriginalSelection.";
-OriginalSelection::usage = "ObjectiveFunction \[Rule] OriginalSelection is an option for \
+ReactionKinetics`ObjectiveFunction::usage = "An option for function Decompositions, e.g. ObjectiveFunction \[Rule] OriginalSelection.";
+ReactionKinetics`OriginalSelection::usage = "ObjectiveFunction \[Rule] OriginalSelection is an option for \
 CoveringDecompositionSet to specify how the consecutive decompositions should be searched for. \
 (The naming is purely historical and has no mathematical justification.)";
-PlotFunction::usage = "An option for functions ShowFHJGraph, ShowVolpertGraph, SimulationPlot, SimulationPlot2D and SimulationPlot3D. \
+ReactionKinetics`PlotFunction::usage = "An option for functions ShowFHJGraph, ShowVolpertGraph, SimulationPlot, SimulationPlot2D and SimulationPlot3D. \
 E.g. PlotFunction \[Rule] \"GraphPlot\" uses \"GraphPlot\" to visualize the results.";
-Positivity::usage = "An option for function StationaryPoints. Positivity \[Rule] True tries to find positive stationary points.";
-Preprocess::usage = "An option for function Decompositions. Preprocess \[Rule] True does preprocessing.";
-Side::usage = "An option for function FilterReactions. Side \[Rule] \"Product\" (or \"Reactant\" or \"All\") filters all the reaction steps, \
+ReactionKinetics`Positivity::usage = "An option for function StationaryPoints. Positivity \[Rule] True tries to find positive stationary points.";
+ReactionKinetics`Preprocess::usage = "An option for function Decompositions. Preprocess \[Rule] True does preprocessing.";
+ReactionKinetics`Side::usage = "An option for function FilterReactions. Side \[Rule] \"Product\" (or \"Reactant\" or \"All\") filters all the reaction steps, \
 where one of the reactant or product or (reactant or product) species is contained in a given list of species.";
-Species::usage = "An option for functions SimulationPlot, SimulationPlot2D and SimulationPlot3D. \
+ReactionKinetics`Species::usage = "An option for functions SimulationPlot, SimulationPlot2D and SimulationPlot3D. \
 Species \[Rule] listspecies only plots those species given by listspecies.";
-StronglyConnectedComponentsColors::usage = "An option for function ShowFHJGraph. StronglyConnectedComponentsColors \[Rule] listcolors colors the strongly connected \
+ReactionKinetics`StronglyConnectedComponentsColors::usage = "An option for function ShowFHJGraph. StronglyConnectedComponentsColors \[Rule] listcolors colors the strongly connected \
 components of the FHJ graph according to listcolors.";
-TimeLimit::usage = "An option for function AbsoluteConcentrationRobustness. \
+ReactionKinetics`TimeLimit::usage = "An option for function AbsoluteConcentrationRobustness. \
 TimeLimit \[Rule] timelimit suppresses calculations if its duration exceeds timelimit.";
 Tolerance::usage = "An option for function Simulation (see approximation methods).";
 Verbose::usage = "An option for several functions. Verbose \[Rule] True (default) gives more detailed information about the calculation.";
@@ -222,11 +216,11 @@ Global`z::usage = "Default symbol for the variable of the probability generating
 (*Constants*)
 
 
-AvogadrosNumber::usage = "AvogadrosNumber (1/Mole) returns the Avogadro constant that is the number of constituent particles contained \
+ReactionKinetics`AvogadrosNumber::usage = "AvogadrosNumber (1/Mole) returns the Avogadro constant that is the number of constituent particles contained \
 in the amount of substance given by one mole.";
 AvogadrosNumber = QuantityMagnitude[UnitConvert[Quantity["AvogadroNumber"]]]; (*1 / Mole*)
 
-MolarGasConstant::usage = "MolarGasConstant (Joule/(Kelvin*Mole)) returns the ideal gas constant that is the constant of proportionality \
+ReactionKinetics`MolarGasConstant::usage = "MolarGasConstant (Joule/(Kelvin*Mole)) returns the ideal gas constant that is the constant of proportionality \
 expressing the relation between the energy scale and the temperature scale in physics.";
 MolarGasConstant = QuantityMagnitude[UnitConvert[Quantity["MolarGasConstant"]]]; (*Joule / Kelvin / Mole*)
 
@@ -235,7 +229,7 @@ MolarGasConstant = QuantityMagnitude[UnitConvert[Quantity["MolarGasConstant"]]];
 (*Auxiliary functions*)
 
 
-ZeroVectorQ::usage = "ZeroVectorQ[list] checks whether list has only zero elements.";
+ReactionKinetics`ZeroVectorQ::usage = "ZeroVectorQ[list] checks whether list has only zero elements.";
 ZeroVectorQ[v_List] := Max[Abs[v]] === 0;
 
 
@@ -289,7 +283,7 @@ Get[FindFile["Stoichiometry.wl"]];
 (*MassActionKinetics, RightHandSide, DeterministicModel*)
 
 
-MassActionKinetics::usage = "MassActionKinetics[{reactions},rratecoeffs,vars] builds up the mass action type kinetics attached to the reaction using \
+ReactionKinetics`MassActionKinetics::usage = "MassActionKinetics[{reactions},rratecoeffs,vars] builds up the mass action type kinetics attached to the reaction using \
 rratecoeffs as reaction rate coefficients and vars as the names of independent variables of the kinetic function.";
 
 MassActionKinetics::args = "The number of variables or that of reaction rate coefficients do not match with the dimensions of \[Alpha].";
@@ -322,7 +316,7 @@ MassActionKinetics[alpha_?MatrixQ,rratecoeffs_?VectorQ,variables_?VectorQ] :=
 MassActionKinetics[___] := (Message[MassActionKinetics::"badarg"]; $Failed)
 
 
-RightHandSide::usage = "RightHandSide[{reactions},rates,vars,options] returns the right-hand side of the \
+ReactionKinetics`RightHandSide::usage = "RightHandSide[{reactions},rates,vars,options] returns the right-hand side of the \
 induced kinetic differential equation assigned to the reaction using vars as the names of independent variables and rates as the kinetic function. \
 MassAction \[Rule] True returns the right-hand side of the induced kinetic differential equation endowed with mass action type kinetics.";
 
@@ -350,7 +344,7 @@ RightHandSide[{reactions__}, rates_?VectorQ, vars_?VectorQ, opts:OptionsPattern[
 RightHandSide[___] := (Message[RightHandSide::"badarg"]; $Failed)
 
 
-DeterministicModel::usage = "DeterministicModel[{reactions},rates,vars,options] returns the induced kinetic differential equation \
+ReactionKinetics`DeterministicModel::usage = "DeterministicModel[{reactions},rates,vars,options] returns the induced kinetic differential equation \
 assigned to the reaction using rates as the kinetic function and vars as the names of the independent variables (both are optional arguments). \
 MassAction \[Rule] True yields the induced kinetic differential equation endowed with mass action type kinetics. \n\
 DeterministicModel[{reactions},arrheniuscoeffs,enthalpies,c0,V,Ta,tres,p1,p2,options] returns a general evolution equation for reactions involving temperature effects. \
@@ -403,7 +397,7 @@ DeterministicModel[___] := (Message[DeterministicModel::"badarg"]; $Failed)
 (*Concentrations*)
 
 
-Concentrations::usage = "Concentrations[{reactions},rates,initvalues,vars,options] attempts to solve the \
+ReactionKinetics`Concentrations::usage = "Concentrations[{reactions},rates,initvalues,vars,options] attempts to solve the \
 induced kinetic differential equation endowed with some kinetics described by the rates. Initial concentrations are given by initvalues, \
 vars contain the names of the independent variables. This way Concentrations uses DSolve, accepts symbolic parameters, and \
 tries to return the symbolic solution to the equation (i.e. concentrations versus time curves). \n\
@@ -504,7 +498,7 @@ Concentrations[___] := (Message[Concentrations::"badarg"]; $Failed)
 (*StationaryPoints, GammaLeftNullSpace, MassConservationRelations, EigensystemJacobian*)
 
 
-StationaryPoints::usage = "StationaryPoints[{reactions},rates,initvalues,vars] returns the stationary points, found in a reaction simplex, \
+ReactionKinetics`StationaryPoints::usage = "StationaryPoints[{reactions},rates,initvalues,vars] returns the stationary points, found in a reaction simplex, \
 of the induced kinetic differential equation endowed with some kinetics described by the rates.";
 
 Options[StationaryPoints] := Join[{Positivity->False, Conditions->{}, Method->"Automatic", MassAction->True},Options[ReactionsData],Options[Reduce],Options[RightHandSide]];
@@ -597,7 +591,7 @@ StationaryPoints[{reactions__},rates_?VectorQ,init_?VectorQ,vars_?VectorQ,opts:O
 StationaryPoints[___] := (Message[StationaryPoints::"badarg"]; $Failed)
 
 
-GammaLeftNullSpace::usage = "GammaLeftNullSpace[{reactions},init,vars,opts] gives the left null space of the stoichiometric matrix \[Gamma].";
+ReactionKinetics`GammaLeftNullSpace::usage = "GammaLeftNullSpace[{reactions},init,vars,opts] gives the left null space of the stoichiometric matrix \[Gamma].";
 
 Options[GammaLeftNullSpace] := Options[ReactionsData];
 
@@ -637,7 +631,7 @@ GammaLeftNullSpace[{reactions__},init_?VectorQ,vars_?VectorQ,opts:OptionsPattern
 GammaLeftNullSpace[___] := (Message[GammaLeftNullSpace::badarg]; $Failed)
 
 
-MassConservationRelations::usage = "MassConservationRelations[{reactions},vars] gives a set of conditions for a (strictly positive) mass vector \
+ReactionKinetics`MassConservationRelations::usage = "MassConservationRelations[{reactions},vars] gives a set of conditions for a (strictly positive) mass vector \
 showing whether the given reaction is mass conserving or not.";
 
 Options[MassConservationRelations] := Options[ReactionsData];
@@ -659,7 +653,7 @@ MassConservationRelations[{reactions__},vars_?VectorQ,opts:OptionsPattern[]] :=
 MassConservationRelations[___] := (Message[MassConservationRelations::"badarg"]; $Failed)
 
 
-EigensystemJacobian::usage = "EigensystemJacobian[{reactions},rates,vars] returns the eigensystem of the Jacobian matrix of the right-hand side of the \
+ReactionKinetics`EigensystemJacobian::usage = "EigensystemJacobian[{reactions},rates,vars] returns the eigensystem of the Jacobian matrix of the right-hand side of the \
 induced kinetic differential equation endowed with some kinetics given by the rates.";
 
 EigensystemJacobian::badarg = "Illegal argument of function EigensystemJacobian.";
@@ -697,7 +691,7 @@ EigensystemJacobian[___] := (Message[EigensystemJacobian::badarg]; $Failed)
 (*AbsoluteConcentrationsRobustness*)
 
 
-AbsoluteConcentrationRobustness::usage = "AbsoluteConcentrationRobustness[{reactions},options] checks the Shinar-Feinberg conditions for the reaction.";
+ReactionKinetics`AbsoluteConcentrationRobustness::usage = "AbsoluteConcentrationRobustness[{reactions},options] checks the Shinar-Feinberg conditions for the reaction.";
 
 AbsoluteConcentrationRobustness::badarg = "Illegal argument of function AbsoluteConcentrationRobustness.";
 AbsoluteConcentrationRobustness::maybe = "`1`.";
@@ -764,7 +758,7 @@ ChangeUnits[V_,rates_,alphatr_] := rates*(AvogadrosNumber*V)^(1 - Total /@ alpha
 (*MasterEquation*)
 
 
-MasterEquation::usage = "MasterEquation[{reactions},rratecoeffs,vars,options] releases the master equation of the induced kinetic Markov process \
+ReactionKinetics`MasterEquation::usage = "MasterEquation[{reactions},rratecoeffs,vars,options] releases the master equation of the induced kinetic Markov process \
 endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs. \
 The optional argument vars contains the names of the independent variables.";
 
@@ -815,7 +809,7 @@ MasterEquation[___] := (Message[MasterEquation::badarg]; $Failed)
 (*StationaryProbabilityDistributionEquation*)
 
 
-StationaryProbabilityDistributionEquation::usage = "StationaryProbabilityDistributionEquation[{reactions},rratecoeffs,vars,options] releases \
+ReactionKinetics`StationaryProbabilityDistributionEquation::usage = "StationaryProbabilityDistributionEquation[{reactions},rratecoeffs,vars,options] releases \
 the system of equations for the stationary distribution of the induced kinetic Markov process endowed with stochastic mass action type kinetics \
 with stochastic reaction rate coefficients given by rratecoeffs.";
 
@@ -855,7 +849,7 @@ StationaryProbabilityDistributionEquation[___] := (Message[StationaryProbability
 (*ProbabilityGeneratingFunctionEquation, SolveProbabilityGeneratingFunctionEquation*)
 
 
-ProbabilityGeneratingFunctionEquation::usage = "ProbabilityGeneratingFunctionEquation[{reactions},rrcoeffs,vars,options] \
+ReactionKinetics`ProbabilityGeneratingFunctionEquation::usage = "ProbabilityGeneratingFunctionEquation[{reactions},rrcoeffs,vars,options] \
 displays the partial differential equation for the probability generating function of \
 the induced kinetic Markov process endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rrcoeffs.";
 
@@ -892,7 +886,7 @@ ProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, vars_?Vecto
 ProbabilityGeneratingFunctionEquation[___] := (Message[ProbabilityGeneratingFunctionEquation::badarg]; $Failed)
 
 
-SolveProbabilityGeneratingFunctionEquation::usage = "SolveProbabilityGeneratingFunctionEquation[{reactions},rratecoeffs,init,vars,options] \
+ReactionKinetics`SolveProbabilityGeneratingFunctionEquation::usage = "SolveProbabilityGeneratingFunctionEquation[{reactions},rratecoeffs,init,vars,options] \
 attempts to solve the partial differential equation with initial and boundary conditions for the probability generating function of the induced kinetic Markov process \
 endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs. \n\
 The default method (\"Built-in\") uses DSolve to obtain the symbolic solution for the initial value problem with boundary condition. \
@@ -1031,7 +1025,7 @@ ExpectedSubscript[e_,newvars_,ylist_,vars_,var_] :=
 	];
 
 
-MomentEquations::usage = "MomentEquations[{reactions},a,rratecoeffs,options] displays the a^th moment equations of the induced kinetic Markov process endowed with \
+ReactionKinetics`MomentEquations::usage = "MomentEquations[{reactions},a,rratecoeffs,options] displays the a^th moment equations of the induced kinetic Markov process endowed with \
 stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs. CombinatorialMoments \[Rule] True calculates with combinatorial moments.";
 
 MomentEquations::badarg = "Illegal argument of function MomentEquations.";
@@ -1113,7 +1107,7 @@ MonitorMSG[prop_,pill_,species_] :=
 (*DependencyGraph*)
 
 
-DependencyGraph::usage = "DependencyGraph[{reactions},options] returns the dependency graph of the given reaction.";
+ReactionKinetics`DependencyGraph::usage = "DependencyGraph[{reactions},options] returns the dependency graph of the given reaction.";
 
 DependencyGraph::badarg = "Illegal argument of function DependencyGraph.";
 DependencyGraph::args = "Argument `1` has wrong shape.";
@@ -1150,7 +1144,7 @@ DependencyGraph[{reactions__},depend_?MatrixQ,opts___?OptionQ] :=
 DependencyGraph[__] := (Message[DependencyGraph::badarg]; $Failed);
 
 
-ShowDependencyGraph::usage = "ShowDependencyGraph[{reactions},options] displays the dependency graph of the reaction.";
+ReactionKinetics`ShowDependencyGraph::usage = "ShowDependencyGraph[{reactions},options] displays the dependency graph of the reaction.";
 
 ShowDependencyGraph::badarg = "Illegal argument of function ShowDependencyGraph.";
 
@@ -1382,7 +1376,7 @@ TrapezoidalTauLeapingMethod[species_,alphatr_,gammatr_,rates_,vars_,X0_,maxtime_
 (*Simulation*)
 
 
-Simulation::usage = "Simulation[{reactions},rratecoeffs,init,maxtime,options] simulates the \
+ReactionKinetics`Simulation::usage = "Simulation[{reactions},rratecoeffs,init,maxtime,options] simulates the \
 induced kinetic Markov process of the reaction endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs. \
 The initial state are given by init, while the stopping time is specified by maxtime. \n\
 Options include ExternalSpecies, FixedStepSize, Tolerance (for tau-leaping), MaxIteration, Method, Verbose and Volume.
@@ -1465,7 +1459,7 @@ Simulation[___] := (Message[Simulation::"badarg"]; $Failed)
 (*SimulationPlot, SimulationPlot2D, SimulationPlot3D*)
 
 
-SimulationPlot::usage = "SimulationPlot[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of species, where \
+ReactionKinetics`SimulationPlot::usage = "SimulationPlot[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of species, where \
 the induced kinetic Markov endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs.\n\
 Options include ExternalSpecies, PlotFunction (default is \"ListLinePlot\") and Species (default is All).";
 
@@ -1506,7 +1500,7 @@ SimulationPlot[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, op
 SimulationPlot[___] := (Message[SimulationPlot::"badarg"]; $Failed)
 
 
-SimulationPlot2D::usage = "SimulationPlot2D[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of pairs of species, where \
+ReactionKinetics`SimulationPlot2D::usage = "SimulationPlot2D[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of pairs of species, where \
 the induced kinetic Markov process endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs.\n\
 Options include ExternalSpecies, PlotFunction (default is \"ListPlot\") and Species (default is All).";
 
@@ -1549,7 +1543,7 @@ SimulationPlot2D[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, 
 SimulationPlot2D[___] := (Message[SimulationPlot2D::badarg]; $Failed)
 
 
-SimulationPlot3D::usage = "SimulationPlot3D[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of triples of species, where \
+ReactionKinetics`SimulationPlot3D::usage = "SimulationPlot3D[{reactions},rratecoeffs,init,maxtime,options] simulates and plots the trajectories of triples of species, where \
 the induced kinetic Markov process endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs.\n\
 Options include ExternalSpecies, PlotFunction (default is \"ListPointPlot3D\") and Species (default is All).";
 
@@ -1653,7 +1647,7 @@ Circular[overall_?ReactionQ, steps : {__?ReactionQ}] :=
     ];
 
 
-CoveringDecompositionSet::usage = "CoveringDecompositionSet[overallreaction,reactionsteps,options] gives some of the decompositions \
+ReactionKinetics`CoveringDecompositionSet::usage = "CoveringDecompositionSet[overallreaction,reactionsteps,options] gives some of the decompositions \
 of the overall reaction into the reaction steps denoted by reactionsteps. Note that CoveringDecompositionSet deletes autocatalytic steps of the reaction.\n\
 CoveringDecompositionSet[overall,gamma,options] gives the same where overall is the transpose of the stoichiometrix matrix of \
 the overall reaction, while gamma is the stoichiometric matrix of the reaction steps.";
@@ -1741,7 +1735,7 @@ CoveringDecompositionSet[overall_?ReactionQ, steps_?MatrixQ, opts___?OptionQ] :=
 
 ];
 
-ElementaryReactions::usage = "ElementaryReactions[species,maxproduct,options] computes every possible \
+ReactionKinetics`ElementaryReactions::usage = "ElementaryReactions[species,maxproduct,options] computes every possible \
 elementary steps among the species having at most maxproduct products. \
 The second argument is optional, its default value is Infinity.\n\
 ElementaryReactions[atommatrix,maxproduct,options] does the same from the atomic matrix given by atommatrix. \
@@ -1798,7 +1792,7 @@ ElementaryReactions[atomm_?MatrixQ, maxlen : (_Integer?Positive | Infinity) : In
 ElementaryReactions[___] := (Message[ElementaryReactions::badarg]; $Failed)
 
 
-Obligatory::usage = "Obligatory[overall,gamma] selects those reaction steps from gamma \
+ReactionKinetics`Obligatory::usage = "Obligatory[overall,gamma] selects those reaction steps from gamma \
 which are provably contained in each decomposition of the overall reaction into reaction steps. \
 The function Obligatory returns a list of pairs that contain the mandatory reaction steps \
 and their weights in a decomposition.";
@@ -1819,7 +1813,7 @@ Obligatory[overall_?ReactionQ, reactions : {__?ReactionQ}] :=
 
 Obligatory[___] := (Message[Obligatory::badarg]; $Failed)
 
-Omittable::usage = "Omittable[overall,gamma,options] selects those reaction steps from gamma \
+ReactionKinetics`Omittable::usage = "Omittable[overall,gamma,options] selects those reaction steps from gamma \
 which can be omitted from the decompisitions of the overall reaction into reaction steps.";
 
 Omittable::badarg = "Illegal argument of function Omittable.";
@@ -1832,7 +1826,7 @@ Omittable[overall_?ReactionQ, reactions_?MatrixQ, opts___?OptionQ] :=
 
 Omittable[___] := (Message[Omittable::badarg]; $Failed)
 
-SelectMinimalDecompositions::usage = "SelectMinimalDecompositions[list] selects those vectors \
+ReactionKinetics`SelectMinimalDecompositions::usage = "SelectMinimalDecompositions[list] selects those vectors \
 from the given list which are minimal with respect to the \"component-wise less or equal\" partial order. \
 Note that using this function to select minimal decompositions will not necessarily give truly \
 minimal decompositions, unless all decompositions up to a certain length are given in the list.";
@@ -2175,7 +2169,7 @@ FindAllSolutions[conlist_List, vars : {var_, restvars___}] :=
 
 (* ----------------------------------------------------------------------------------------------------- *)
 
-Decompositions::usage = "Decompositions[overallreaction,reactionsteps,maxlen,options] gives the decompositions of the overall \
+ReactionKinetics`Decompositions::usage = "Decompositions[overallreaction,reactionsteps,maxlen,options] gives the decompositions of the overall \
 reaction into the reaction steps. Note that Decompositions deletes autocatalytic steps of the reaction.\n\
 Decompositions[overall,gamma,maxlen,options] gives the same where overall is the transpose of the stoichiometrix matrix of \
 the overall reaction, while gamma is the stoichiometric matrix of the reaction steps.";
@@ -2247,10 +2241,10 @@ Decompositions[___] := (Message[Decompositions::badarg]; Return[$Failed];)
 (*palettes, notebooks*)
 
 
-OpenReactionKineticsPalette::usage = "OpenReactionKinetics[] provides a palette including the basic symbols \
+ReactionKinetics`OpenReactionKineticsPalette::usage = "OpenReactionKinetics[] provides a palette including the basic symbols \
 in ReactionKinetics.";
 
-OpenReactionKineticsNamesPalette::usage = "OpenReactionKineticsNamesPalette[] provides a palette including the basic names and notions \
+ReactionKinetics`OpenReactionKineticsNamesPalette::usage = "OpenReactionKineticsNamesPalette[] provides a palette including the basic names and notions \
 in ReactionKinetics.";
 
 
@@ -2334,7 +2328,7 @@ OpenReactionKineticsNamesPalette[] :=
 OpenReactionKineticsNamesPalette[__] := (Message[OpenReactionKineticsNamesPalette::"badarg"]; $Failed);
 
 
-ReactionRatesNotebook::usage = "ReactionRatesNotebook[{reactions},options] opens a new notebook where reaction rates can be assigned to the given reaction.";
+ReactionKinetics`ReactionRatesNotebook::usage = "ReactionRatesNotebook[{reactions},options] opens a new notebook where reaction rates can be assigned to the given reaction.";
 
 
 ReactionRatesNotebook::badarg = "Illegal argument of function ReactionRatesNotebook.";
@@ -2400,12 +2394,11 @@ FLAGS`ECHOLOAD = ReactionKinetics`Private`msgflag;
 Remove[ReactionKinetics`Private`msgflag];
 
 
-(* ::Subsection:: *)
+(* ::Subsection::Closed:: *)
 (*end*)
 
 
 End[];
-
 
 If[ $ReactionKineticsPackageLoaded =!= True,
 	If[ Length[Notebooks["ReactionKinetics Palette"]] === 0,
@@ -2418,153 +2411,5 @@ If[ $ReactionKineticsPackageLoaded =!= True,
 
 $ReactionKineticsPackageLoaded = True;
 
-
-SetAttributes[
-	{
-		$ReactionKinetics,
-		$ReactionKineticsPackageLoaded,
-		$ReactionKineticsVersionNumber
-	},
-	{Protected}
-];
-
-
-Protect[
-	AvogadrosNumber,
-	Global`aExplodator,
-	Global`bExplodator,
-	Global`fOregonator,
-	Global`c,
-	Global`t,
-	Global`k,
-	Global`\[DoubleStruckCapitalE],
-	Global`g,
-	Global`\[CapitalPi],
-	Global`P,
-	Global`\[Rho],
-	Global`T,
-	Global`X,
-	Global`z,
-	Bipartite,
-	CombinatorialMoments,
-	ComplexColors,
-	Conditions,
-	EdgeLabels,
-	ExternalSpecies,
-	FixedStepSize,
-	FormattedOutput,
-	GeneratedRateCoefficient,
-	MassAction,
-	Highlight,
-	Indexed,
-	InternalSpecies,
-	MaxIteration,
-	Memo,
-	Method,
-	MolarGasConstant,
-	Numbered,
-	PlotFunction,
-	Positivity,
-	Side,
-	Species,
-	StronglyConnectedComponentsColors,
-	SubgraphHighlight,
-	TimeLimit,
-	Verbose,
-	Volume
-];
-
-
-SetAttributes[
-	{
-		(**)
-		ToCanonicalForm,
-		ToReversible,
-		ReactionsData,
-		ReversibleQ,
-		WeaklyReversibleQ,
-		FHJGraph,
-		ShowFHJGraph,
-		ShowVolpertGraph,
-		SCLGraph,
-		ShowSCLGraph,
-		AcyclicVolpertGraphQ,
-		Atoms,
-		ToAtomMatrix,
-		AtomConservingQ,
-		AtomsQ,
-		FromAtomMatrix,
-		DetailedBalanced,
-		(**)
-		MassActionKinetics,
-		RightHandSide,
-		DeterministicModel,
-		Concentrations,
-		StationaryPoints,
-		GammaLeftNullSpace,
-		EigensystemJacobian,
-		AbsoluteConcentrationRobustness,
-		(**)
-		VolpertIndexing,
-		(**)
-		MassConservationRelations,
-		MasterEquation,
-		StationaryProbabilityDistributionEquation,
-		ProbabilityGeneratingFunctionEquation,
-		SolveProbabilityGeneratingFunctionEquation,
-		MomentEquations,
-		DependencyGraph,
-		ShowDependencyGraph,
-		Simulation,
-		SimulationPlot,
-		SimulationPlot2D,
-		SimulationPlot3D,
-		(**)
-		OpenReactionKineticsPalette,
-		OpenReactionKineticsNamesPalette,
-		ReactionRatesNotebook,
-		(**)
-		FilterReactions,
-		FromStoichiometry,
-		DeleteAutocatalysis,
-		ReversibleFHJRepresentation,
-		MinFHJWeaklyConnectedComponents,
-		MinFHJStronglyConnectedComponents,
-		MaxFHJWeaklyConnectedComponents,
-		MaxFHJStronglyConnectedComponents
-		(*VolpertSpecies*)
-
-	},
-	{Protected,ReadProtected}
-];
-
-
-SetAttributes[
-	{
-	ContejeanDevie,
-	CoveringDecompositionSet,
-	(*DecompositionQ,*)
-	Decompositions,
-	(*ElementaryReactionQ,*)
-	ElementaryReactions,
-	FastSelection,
-	Filter,
-	(*GeneralizedDecompositionQ,*)
-	GreedySelection,
-	LPBased,
-	MinimalDecompositions,
-	ObjectiveFunction,
-	Obligatory,
-	Omittable,
-	OriginalSelection,
-	Preprocess,
-	(*ReactionQ,*)
-	SelectMinimalDecompositions,
-(**)
-	ZeroVectorQ
-    },
-	{Protected,ReadProtected}
-];
-
-
-EndPackage[ ];
+EndPackage[];
+Protect["ReactionKinetics`*"];
