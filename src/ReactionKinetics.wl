@@ -1111,14 +1111,14 @@ ReactionKinetics`DependencyGraph::usage = "DependencyGraph[{reactions},options] 
 DependencyGraph::badarg = "Illegal argument of function DependencyGraph.";
 DependencyGraph::args = "Argument `1` has wrong shape.";
 
-Options[DependencyGraph] := {ExternalSpecies->{}};
+Options[DependencyGraph] := Options[ReactionsData];
 
-DependencyGraph[{reactions__},opts___?OptionQ] :=
-	DependencyGraph[{reactions}, Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}], opts];
+DependencyGraph[{reactions__},opts:OptionsPattern[]] :=
+	DependencyGraph[{reactions}, Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["\[Alpha]"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}], opts];
 
-DependencyGraph[{reactions__},rates_?VectorQ,opts___?OptionQ] :=
+DependencyGraph[{reactions__},rates_?VectorQ,opts:OptionsPattern[]] :=
 	Module[{species, r},
-		{species, r} = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["species","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+		{species, r} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["species","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 		If[Length[rates] === r,
 			DependencyGraph[{reactions}, MapThread[(1 - Boole[SameQ[#1,#2]])&,{rates /. # -> 0, rates}] &/@ species, opts],
@@ -1128,9 +1128,9 @@ DependencyGraph[{reactions__},rates_?VectorQ,opts___?OptionQ] :=
 		]
 	];
 
-DependencyGraph[{reactions__},depend_?MatrixQ,opts___?OptionQ] :=
+DependencyGraph[{reactions__},depend_?MatrixQ,opts:OptionsPattern[]] :=
 	Module[{m, r, gamma},
-		{m, r, gamma} = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M","R","\[Gamma]"],Return[$Failed];,
+		{m, r, gamma} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M","R","\[Gamma]"],Return[$Failed];,
 											{ReactionsData::wrreac,ReactionsData::badarg}];
 		If[Dimensions[depend] === {m,r},
 			Sign[Transpose[Abs[Sign[gamma]]] . depend], (*this is the adjacency matrix of the dependency graph*)
@@ -1147,17 +1147,17 @@ ReactionKinetics`ShowDependencyGraph::usage = "ShowDependencyGraph[{reactions},o
 
 ShowDependencyGraph::badarg = "Illegal argument of function ShowDependencyGraph.";
 
-Options[ShowDependencyGraph] := {ExternalSpecies->{}};
+Options[ShowDependencyGraph] := Join[Options[ReactionsData],Options[GraphPlot],Options[DependencyGraph]];
 
-ShowDependencyGraph[{reactions__},opts___?OptionQ] :=
+ShowDependencyGraph[{reactions__},opts:OptionsPattern[]] :=
 	ShowDependencyGraph[{reactions}, Check[DependencyGraph[{reactions},opts],Return[$Failed];,{DependencyGraph::badarg,DependencyGraph::args}], opts];
 
-ShowDependencyGraph[{reactions__},rates_?VectorQ,opts___?OptionQ] :=
-	ShowDependencyGraph[{reactions}, Check[DependencyGraph[{reactions},rates,opts],Return[$Failed];,{DependencyGraph::badarg,DependencyGraph::args}], opts];
+ShowDependencyGraph[{reactions__},rates_?VectorQ,opts:OptionsPattern[]] :=
+	ShowDependencyGraph[{reactions}, Check[DependencyGraph[{reactions},rates,FilterRules[{opts},Options[DependencyGraph]]],Return[$Failed];,{DependencyGraph::badarg,DependencyGraph::args}], opts];
 
-ShowDependencyGraph[{reactions__},adjmxdepend_?MatrixQ,opts___?OptionQ] :=
+ShowDependencyGraph[{reactions__},adjmxdepend_?MatrixQ,opts:OptionsPattern[]] :=
 	Module[{rsteps, graphrules},
-		rsteps = Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["reactionsteps"],Return[$Failed];,
+		rsteps = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["reactionsteps"],Return[$Failed];,
 								{ReactionsData::wrreac,ReactionsData::badarg}];
 		graphrules = Cases[ArrayRules[adjmxdepend], Rule[{x_,y_},z_]/;(z=!=0) :> Rule[rsteps[[x]],rsteps[[y]]]];
 
@@ -1383,7 +1383,7 @@ The following methods can be used: \"Direct\" (default), \"FirstReaction\", \
 \"NextReaction\", \"ExplicitTau-Leaping\", \"ImplicitTau-Leaping\" and \"TrapezoidalTau-Leaping\".";
 
 
-Options[Simulation] = {ExternalSpecies->{}, FixedStepSize -> 1000, Tolerance -> 0.01, MaxIteration -> Infinity, Method -> "Direct", Verbose -> True, Volume -> Infinity};
+Options[Simulation] = Join[{FixedStepSize -> 1000, Tolerance -> 0.01, MaxIteration -> Infinity, Method -> "Direct", Verbose -> True, Volume -> Infinity},Options[ReactionsData]];
 
 Simulation::badarg = "Illegal argument of function Simulation.";
 Simulation::method = "The given method '`1`' is not available.";
@@ -1396,10 +1396,10 @@ SyntaxInformation[Simulation]={"ArgumentsPattern"->{{__},{__},{__},_,OptionsPatt
 
 Simulation[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts : OptionsPattern[]] :=
 	Module[{
-			exs, fss, tol, maxit, method, verbose, v, cou, coi, rd, res, alpha, beta, gamma,
+			maxit, verbose, v, cou, coi, rd, res, alpha, beta, gamma,
 			m, r, sp, vars, alphatr, betatr, gammatr, x, error
 			},
-		{exs, fss, tol, maxit, method, verbose, v} = {ExternalSpecies, FixedStepSize, Tolerance, MaxIteration, Method, Verbose, Volume} /. Flatten[{opts, Options[Simulation]}];
+		{maxit, verbose, v} = {OptionValue[MaxIteration], OptionValue[Verbose], OptionValue[Volume]};
 		If[v===Infinity && (Or @@ (Not[IntegerQ[#]]& /@ X0)), Message[Simulation::intarg]; Return[$Failed];];
 		If[Positive[v],
 			cou[vol_,atr_] := If[vol===Infinity, rates, ChangeUnits[vol,rates,atr]];
@@ -1407,7 +1407,7 @@ Simulation[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts :
 			Message[Simulation::volarg,v];
 			Return[$Failed];
 		];
-		rd := Check[ReactionsData[{reactions},Flatten[{exs}]]["\[Alpha]","\[Beta]","\[Gamma]","M","R","species","variables"], Return[$Failed];,
+		rd := Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["\[Alpha]","\[Beta]","\[Gamma]","M","R","species","variables"], Return[$Failed];,
 						{ReactionsData::wrreac,ReactionsData::badarg}];
 		If[verbose,
 			x = Dynamic[Refresh[Round[Clock[Infinity]],UpdateInterval->1]];
@@ -1426,7 +1426,7 @@ Simulation[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts :
 
 		If[r===Length[rates] && m===Length[X0] && Min[X0]>=0 && Min[rates]>=0,
 			If[maxtime>0,
-				Switch[method,
+				Switch[OptionValue[Method],
 					"Direct",
 						DirectMethod[sp,alphatr,gammatr,cou[v,alphatr],coi[v,X0],maxtime,maxit,verbose],
 					"FirstReaction",
@@ -1434,11 +1434,11 @@ Simulation[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts :
 					"NextReaction",
 						NextReactionStepMethod[sp,alphatr,gammatr,cou[v,alphatr],coi[v,X0],maxtime,maxit,verbose],
 					"ExplicitTau-Leaping",
-						ExplicitTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],coi[v,X0],maxtime,maxit,fss,tol,verbose],
+						ExplicitTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],coi[v,X0],maxtime,maxit,OptionValue[FixedStepSize],OptionValue[Tolerance],verbose],
 					"ImplicitTau-Leaping",
-						ImplicitTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],vars,coi[v,X0],maxtime,maxit,fss,tol,verbose],
+						ImplicitTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],vars,coi[v,X0],maxtime,maxit,OptionValue[FixedStepSize],OptionValue[Tolerance],verbose],
 					"TrapezoidalTau-Leaping",
-						TrapezoidalTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],vars,coi[v,X0],maxtime,maxit,fss,tol,verbose],
+						TrapezoidalTauLeapingMethod[sp,alphatr,gammatr,cou[v,alphatr],vars,coi[v,X0],maxtime,maxit,OptionValue[FixedStepSize],OptionValue[Tolerance],verbose],
 					_,
 						Message[Simulation::method,method];
 						Return[$Failed];
@@ -1466,21 +1466,28 @@ Options include ExternalSpecies, PlotFunction (default is \"ListLinePlot\") and 
 listplotfunctions = {"ListPointPlot3D", "ListLinePlot", "ListPlot", "ListLogPlot"};
 
 
-Options[SimulationPlot] = {ExternalSpecies->{}, PlotFunction -> "ListLinePlot", Species -> All};
+Options[SimulationPlot] = Join[
+	{PlotFunction -> "ListLinePlot", Species -> All},
+	Options[ReactionsData],
+	Options[Simulation],
+	Options[ListLinePlot3D],
+	Options[ListLinePlot],
+	Options[ListPlot],
+	Options[ListLogPlot]
+];
 
 SimulationPlot::badarg = "Illegal argument of function SimulationPlot.";
 SimulationPlot::species = "Wrong format or none of the species '`1`' is in the list of internal species of reaction {`2`,...}.";
 SimulationPlot::plotfunc = "The symbol '`1`' is not a list plotting function. Try \"ListPointPlot3D\", \"ListLinePlot\", \"ListPlot\" or \"ListLogPlot\".";
 
-SimulationPlot[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts___?OptionQ] :=
-	Module[{ops, plot, sp, givensp, proc, w},
-			ops = Flatten[{opts, Options[SimulationPlot]}];
+SimulationPlot[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts:OptionsPattern[]] :=
+	Module[{plot, sp, givensp, proc, w},
 
-			If[MemberQ[listplotfunctions,(plot = (PlotFunction /. ops))],
+			If[MemberQ[listplotfunctions,(plot = OptionValue[PlotFunction])],
 				(*Monitor*)
 				plot = ToExpression[plot]; (*Flatten[{ExternalSpecies/.ops}]*)
-				sp = Check[ReactionsData[{reactions},ExternalSpecies/.ops]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
-				givensp = (Species /. ops) /. All->sp;
+				sp = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+				givensp = OptionValue[Species] /. All->sp;
 
 				If[(w = Flatten[Position[sp,#] &/@ Union[Flatten[{givensp}]]]) =!= {},
 					proc = Check[Simulation[{reactions},rates,X0,maxtime, FilterRules[{opts},Options[Simulation]]],Return[$Failed];,
@@ -1509,20 +1516,19 @@ SpecSubsets[l_,w_] := Part[#,w] &/@ l;
 listplot2dfunctions = {"ListPlot","ListLinePlot"}; (*ParametricPlot*)
 
 
-Options[SimulationPlot2D] = {ExternalSpecies->{}, PlotFunction->"ListPlot", Species -> All};
+Options[SimulationPlot2D] = Join[{PlotFunction->"ListPlot", Species -> All}, Options[ReactionsData], Options[Simulation], Options[ListPlot], Options[ListLinePlot]];
 
 SimulationPlot2D::badarg = "Illegal argument of function SimulationPlot2D.";
 SimulationPlot2D::species = "Wrong format or none of the given list of pairs of species '`1`' is in the list of internal species of reaction {`2`,...}.";
 SimulationPlot2D::plotfunc = "The symbol '`1`' is not a valid 2D plotting function. Try \"ListPlot\" or \"ListLinePlot\".";
 
-SimulationPlot2D[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts___?OptionQ] :=
-	Module[{ ops, plot, plotopts, sp, givensp, proc, w },
-			ops = Flatten[{opts, Options[SimulationPlot2D]}];
-			If[MemberQ[listplot2dfunctions,(plot = PlotFunction /. ops)],
+SimulationPlot2D[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts:OptionsPattern[]] :=
+	Module[{ plot, plotopts, sp, givensp, proc, w },
+			If[MemberQ[listplot2dfunctions,(plot = OptionValue[PlotFunction])],
 				(*Monitor*)
 				plot = ToExpression[plot];
-				sp = Check[ReactionsData[{reactions},ExternalSpecies/.ops]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
-				givensp = (Species /. ops) /. All->Subsets[sp,{2}];
+				sp = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+				givensp = OptionValue[Species] /. All->Subsets[sp,{2}];
 				If[MatrixQ[givensp] && Last[Dimensions[givensp]]===2 &&(w = Flatten[Position[sp,#]&/@#] &/@ givensp) =!= {},
 					proc = Check[Last /@ Simulation[{reactions},rates,X0,maxtime,FilterRules[{opts},Options[Simulation]]],Return[$Failed];,
 								{Simulation::volarg,Simulation::rsarg,Simulation::intarg,Simulation::time,Simulation::method,Simulation::badarg}];
@@ -1550,19 +1556,19 @@ Options include ExternalSpecies, PlotFunction (default is \"ListPointPlot3D\") a
 listplot3dfunctions = {"ListPlot3D","ListPointPlot3D"}; (*ParametricPlot*)
 
 
-Options[SimulationPlot3D] = {ExternalSpecies->{}, PlotFunction->"ListPointPlot3D", Species -> All};
+Options[SimulationPlot3D] = Join[{PlotFunction->"ListPointPlot3D", Species -> All},Options[ReactionsData],Options[Simulation],Options[ListPlot3D],Options[ListPointPlot3D]];
 
 SimulationPlot3D::badarg = "Illegal argument of function SimulationPlot3D.";
 SimulationPlot3D::species = "Wrong format or none of the given list of species '`1`' is in the list of internal species of reaction {`2`,...}.";
 SimulationPlot3D::plotfunc = "The given symbol '`1`' is not a valid 3D plotting function. Try \"ListPlot3D\" or \"ListPointPlot3D\".";
 
-SimulationPlot3D[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts___?OptionQ]:=
-	Module[{ ops, plot, plotopts, sp, givensp, proc, w },
+SimulationPlot3D[{reactions__}, rates_?VectorQ, X0_?VectorQ, maxtime_?NumericQ, opts:OptionsPattern[]]:=
+	Module[{ plot, plotopts, sp, givensp, proc, w },
 			ops = Flatten[{opts, Options[SimulationPlot3D]}];
-			If[MemberQ[listplot3dfunctions,(plot = PlotFunction /. ops)],
+			If[MemberQ[listplot3dfunctions,(plot = OptionValue[PlotFunction])],
 				plot = ToExpression[plot];
 				(*Monitor*)
-				sp = Check[ReactionsData[{reactions},ExternalSpecies/.ops]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+				sp = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["species"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 				givensp = (Species /. ops) /. All->Subsets[sp,{3}];
 				If[MatrixQ[givensp] && Last[Dimensions[givensp]]===3 &&(w = Flatten[Position[sp,#]&/@#] &/@ givensp) =!= {},
 					proc = Check[Last /@ Simulation[{reactions},rates,X0,maxtime,FilterRules[{opts},Options[Simulation]]],Return[$Failed];,
