@@ -762,25 +762,25 @@ ReactionKinetics`MasterEquation::usage = "MasterEquation[{reactions},rratecoeffs
 endowed with stochastic mass action type kinetics with stochastic reaction rate coefficients given by rratecoeffs. \
 The optional argument vars contains the names of the independent variables.";
 
-Options[MasterEquation] := {ExternalSpecies->{}};
+Options[MasterEquation] := Options[ReactionsData];
 
 MasterEquation::badarg = "Illegal argument of function MasterEquation.";
 MasterEquation::args = "Argument `1` or `2` has wrong shape.";
 
 MasterEquation[{reactions__}, h_Symbol:Global`P, opts : OptionsPattern[]] :=
 	MasterEquation[{reactions},
-		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 												{ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
 MasterEquation[{reactions__}, rates_?VectorQ, h_Symbol:Global`P, opts : OptionsPattern[]] :=
 	MasterEquation[{reactions},rates,
-		Prepend[Array[Subscript[Global`x, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+		Prepend[Array[Subscript[Global`x, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 														{ReactionsData::wrreac,ReactionsData::badarg}]],Global`t], h, opts];
 
-MasterEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`P, OptionsPattern[]] :=
+MasterEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`P, opts:OptionsPattern[]] :=
 	Module[{alpha, gamma, m, r, alphatr, gammatrind, n},
 
-			{alpha, gamma, m, r} = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Gamma]","M","R"],Return[$Failed];,
+			{alpha, gamma, m, r} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["\[Alpha]","\[Gamma]","M","R"],Return[$Failed];,
 												{ReactionsData::wrreac,ReactionsData::badarg}];
 			alphatr = Transpose[alpha];
 			gammatrind = MapIndexed[{#1, First[#2]}&, Transpose[gamma]];
@@ -813,29 +813,29 @@ ReactionKinetics`StationaryProbabilityDistributionEquation::usage = "StationaryP
 the system of equations for the stationary distribution of the induced kinetic Markov process endowed with stochastic mass action type kinetics \
 with stochastic reaction rate coefficients given by rratecoeffs.";
 
-Options[StationaryProbabilityDistributionEquation] := {ExternalSpecies->{}};
+Options[StationaryProbabilityDistributionEquation] := Join[Options[ReactionsData], Options[MasterEquation]];
 
 StationaryProbabilityDistributionEquation::badarg = "Illegal argument of function StationaryProbabilityDistributionEquation.";
 StationaryProbabilityDistributionEquation::args = "Argument `1` or `2` has wrong shape.";
 
 StationaryProbabilityDistributionEquation[{reactions__}, h_Symbol:Global`\[CapitalPi], opts : OptionsPattern[]] :=
 	StationaryProbabilityDistributionEquation[{reactions},
-		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 										  {ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
 StationaryProbabilityDistributionEquation[{reactions__}, rates_?VectorQ, h_Symbol:Global`\[CapitalPi], opts : OptionsPattern[]] :=
 	StationaryProbabilityDistributionEquation[{reactions},rates,
-		Array[Subscript[Global`x, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+		Array[Subscript[Global`x, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 										   {ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
-StationaryProbabilityDistributionEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`\[CapitalPi], OptionsPattern[]] :=
-	Module[{alpha, gamma, m, r, exs = OptionValue[ExternalSpecies]},
+StationaryProbabilityDistributionEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`\[CapitalPi], opts:OptionsPattern[]] :=
+	Module[{alpha, gamma, m, r},
 
-			{m, r} = Check[ReactionsData[{reactions},exs]["M","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			{m, r} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M","R"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[ Length[rates] === r && Length[vars] === m,
 
-				(Last[#]==0/.(h[Global`t,q___]:>h[q])) &/@ MasterEquation[{reactions}, rates, Prepend[vars,Global`t], h, ExternalSpecies->exs],
+				(Last[#]==0/.(h[Global`t,q___]:>h[q])) &/@ MasterEquation[{reactions}, rates, Prepend[vars,Global`t], h, FilterRules[{opts},Options[MasterEquation]]],
 
 				Message[StationaryProbabilityDistributionEquation::args,rates,vars];
 				$Failed
@@ -856,22 +856,22 @@ the induced kinetic Markov process endowed with stochastic mass action type kine
 ProbabilityGeneratingFunctionEquation::badarg = "Illegal argument of function ProbabilityGeneratingFunctionEquation.";
 ProbabilityGeneratingFunctionEquation::args = "Argument `1` or `2` has wrong shape.";
 
-Options[ProbabilityGeneratingFunctionEquation] := {ExternalSpecies->{}};
+Options[ProbabilityGeneratingFunctionEquation] := Options[ReactionsData];
 
 ProbabilityGeneratingFunctionEquation[{reactions__}, h_Symbol:Global`g, opts : OptionsPattern[]] :=
 	ProbabilityGeneratingFunctionEquation[{reactions},
-		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 										  {ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
 ProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, h_Symbol:Global`g, opts : OptionsPattern[]] :=
 	ProbabilityGeneratingFunctionEquation[{reactions},rates,
-		Prepend[Array[Subscript[Global`z, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+		Prepend[Array[Subscript[Global`z, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 												   {ReactionsData::wrreac,ReactionsData::badarg}]
 					 ], Global`t], h, opts];
 
-ProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`g, OptionsPattern[]] :=
+ProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, vars_?VectorQ, h_Symbol:Global`g, opts:OptionsPattern[]] :=
 	Module[{alpha, beta, m, r, tv = First[vars], zv = Rest[vars]},
-			{alpha, beta, m, r} = Check[ReactionsData[{reactions},OptionValue[ExternalSpecies]]["\[Alpha]","\[Beta]","M","R"],Return[$Failed];,
+			{alpha, beta, m, r} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["\[Alpha]","\[Beta]","M","R"],Return[$Failed];,
 									   {ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[Length[rates] === r && Length[vars] === m+1,
@@ -902,36 +902,36 @@ SolveProbabilityGeneratingFunctionEquation::betamaxlone = "All the entries of \[
 SolveProbabilityGeneratingFunctionEquation::betamaxerr = "There exists an entry in \[Beta] which is greater than one. Thus the method `1` cannot be applied. \
 Try \"Characteristics\" or \"Built-in\".";
 
-Options[SolveProbabilityGeneratingFunctionEquation] := {ExternalSpecies->{}, Method->"Built-in"};
+Options[SolveProbabilityGeneratingFunctionEquation] := Join[{Method->"Built-in"}, Options[ReactionsData], Options[DSolve]];
 
-SolveProbabilityGeneratingFunctionEquation[{reactions__}, h_Symbol:Global`g, opts___?OptionQ] :=
+SolveProbabilityGeneratingFunctionEquation[{reactions__}, h_Symbol:Global`g, opts:OptionsPattern[]] :=
 	SolveProbabilityGeneratingFunctionEquation[{reactions},
-			Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+			Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 													{ReactionsData::"wrreac",ReactionsData::"badarg"}]],
-			Array[Superscript[Subscript[Global`x, #],0]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+			Array[Superscript[Subscript[Global`x, #],0]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 															{ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
-SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, h_Symbol:Global`g, opts___?OptionQ] :=
+SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, h_Symbol:Global`g, opts:OptionsPattern[]] :=
 	SolveProbabilityGeneratingFunctionEquation[{reactions}, rates,
-			Array[Superscript[Subscript[Global`x, #],0]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+			Array[Superscript[Subscript[Global`x, #],0]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 															{ReactionsData::wrreac,ReactionsData::badarg}]], h, opts];
 
-SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, init_?VectorQ, h_Symbol:Global`g, opts___?OptionQ]:=
+SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, init_?VectorQ, h_Symbol:Global`g, opts:OptionsPattern[]]:=
 	SolveProbabilityGeneratingFunctionEquation[{reactions}, rates, init,
-		Prepend[Array[Subscript[Global`z, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["M"],Return[$Failed];,
+		Prepend[Array[Subscript[Global`z, #]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["M"],Return[$Failed];,
 														{ReactionsData::wrreac,ReactionsData::badarg}]], Global`t], h, opts];
 
-SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, init_?VectorQ, vars_?VectorQ, h_Symbol:Global`g, opts___?OptionQ] :=
+SolveProbabilityGeneratingFunctionEquation[{reactions__}, rates_?VectorQ, init_?VectorQ, vars_?VectorQ, h_Symbol:Global`g, opts:OptionsPattern[]] :=
 	Module[{
-			 exs = FilterRules[{opts},ExternalSpecies], tv = First[vars], zv = Rest[vars], method,
+			 tv = First[vars], zv = Rest[vars], method,
 			 rd, m, alpha, beta, alphatr, betatr, rsteporders, order, maxbeta,
 			 zrb, coeffarray, bb, Ab, u, ub, ubs, v, vb, cb, s, eqsol, homsol, inhomsol, pgfe
 		   },
-			rd = Check[ReactionsData[{reactions},exs],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			rd = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			If[(m = rd["M"]) === Length[init] && Length[rates] === rd["R"] && Length[vars] === m+1,
 
-				method = Method /. Flatten[{opts, Options[SolveProbabilityGeneratingFunctionEquation]}];
+				method = OptionValue[Method];
 				{alpha, beta} = rd["\[Alpha]","\[Beta]"];
 				{alphatr, betatr} = Transpose /@ {alpha, beta};
 				rsteporders = rd["reactionsteporders"];
@@ -1033,11 +1033,11 @@ MomentEquations::args = "Argument `1` has wrong shape.";
 MomentEquations::nonnegarg = "Argument `1` must be a non-zero vector having nonnegative integer entries.";
 MomentEquations::speciesarg = "Argument `1` contains invalid internal species.";
 
-Options[MomentEquations] := {CombinatorialMoments->False, ExternalSpecies->{}};
+Options[MomentEquations] := Join[{CombinatorialMoments->False}, Options[ReactionsData]];
 
 MomentEquations[{reactions__}, a_, opts : OptionsPattern[]] :=
 	MomentEquations[{reactions},a,
-		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 												{ReactionsData::"wrreac",ReactionsData::"badarg"}]], Global`\[DoubleStruckCapitalE], Global`t, opts];
 
 MomentEquations[{reactions__}, a_, rates_?VectorQ, opts : OptionsPattern[]] := MomentEquations[{reactions}, a, rates, Global`\[DoubleStruckCapitalE], Global`t, opts];
@@ -1045,21 +1045,20 @@ MomentEquations[{reactions__}, a_, rates_?VectorQ, opts : OptionsPattern[]] := M
 (*{e_Symbol, var_Symbol} or e_Symbol:Global`E, optional*)
 MomentEquations[{reactions__}, a_, e_Symbol, var_Symbol, opts : OptionsPattern[]] :=
 	MomentEquations[{reactions},a,
-		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},ExternalSpecies]]["R"],Return[$Failed];,
+		Array[Subscript[Global`k,#]&,Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["R"],Return[$Failed];,
 												{ReactionsData::wrreac,ReactionsData::badarg}]], e, var, opts];
 
-MomentEquations[{reactions__}, a_, rates_?VectorQ, e_Symbol, var_Symbol, OptionsPattern[]] :=
+MomentEquations[{reactions__}, a_, rates_?VectorQ, e_Symbol, var_Symbol, opts:OptionsPattern[]] :=
 	Module[{
-			species, m, l, sppos, a1, pgfe, vars, newvars, exp, es,
-			exs = OptionValue[ExternalSpecies], combmom = OptionValue[CombinatorialMoments]
+			species, m, l, sppos, a1, pgfe, vars, newvars, exp, es
 		   },
 
-			{species, m} = Check[ReactionsData[{reactions},exs]["species","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
+			{species, m} = Check[ReactionsData[{reactions},FilterRules[{opts},Options[ReactionsData]]]["species","M"],Return[$Failed];,{ReactionsData::wrreac,ReactionsData::badarg}];
 
 			Switch[a,
 				{__?MomentswithSpeciesQ},
 					If[(sppos = Flatten[Position[species,#]& /@ First[a1 = Transpose[a]]]) =!= {},
-						MomentEquations[{reactions}, #, rates, e, var, ExternalSpecies->exs, CombinatorialMoments->combmom]& /@ ((UnitVector[m,#]& /@ sppos)*Last[a1]),
+						MomentEquations[{reactions}, #, rates, e, var, opts]& /@ ((UnitVector[m,#]& /@ sppos)*Last[a1]),
 						Message[MomentEquations::speciesarg,a];
 						Return[$Failed];
 					],
@@ -1067,7 +1066,7 @@ MomentEquations[{reactions__}, a_, rates_?VectorQ, e_Symbol, var_Symbol, Options
 					l = Length[a];
 					If[l === m,
 						If[combmom,
-							pgfe = Check[ProbabilityGeneratingFunctionEquation[{reactions},rates,ExternalSpecies->exs],Return[$Failed];,
+							pgfe = Check[ProbabilityGeneratingFunctionEquation[{reactions},rates,FilterRules[{opts},Options[ProbabilityGeneratingFunctionEquation]]],Return[$Failed];,
 											{ProbabilityGeneratingFunctionEquation::args,ProbabilityGeneratingFunctionEquation::badarg}];
 							vars = First[pgfe] /. Derivative[x__][y_][z__]:>{z};
 							newvars = ToString /@ species;
@@ -1075,7 +1074,7 @@ MomentEquations[{reactions__}, a_, rates_?VectorQ, e_Symbol, var_Symbol, Options
 												/. Derivative[x_,y__][f_][z__]:>D[ExpectedSubscript[e,newvars,{y},Rest[vars],var],{var,x}]
 												/. Global`g[Global`t,Sequence@@Array[1&,l]]->1 /. func_[Global`t]:>func[var],
 							D[Subscript[e,ToString[Inner[Power,species,a,Times],StandardForm]][var],var] ==
-								Total[(Times@@StirlingS2[a,#])*Last[MomentEquations[{reactions},#,rates,e,var,ExternalSpecies->exs,CombinatorialMoments->True]]& /@ Rest[Tuples[Prepend[Range[Max[a]],0],l]]]
+								Total[(Times@@StirlingS2[a,#])*Last[MomentEquations[{reactions},#,rates,e,var,CombinatorialMoments->True,opts]]& /@ Rest[Tuples[Prepend[Range[Max[a]],0],l]]]
 						],
 						Message[MomentEquations::args,a];
 						Return[$Failed];
