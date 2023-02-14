@@ -112,8 +112,8 @@ subgraphedges[graph_,vtceslist_] :=
 RdataOptions = {ExternalSpecies->{},InternalSpecies->{}};
 ModelNameQ[name_?StringQ]:=KeyExistsQ[ReactionKineticsModels`Reactions, name];
 ModelNameQ[name_]:=False;
-Rdata[{builtInModel_?ModelNameQ}, opts:OptionsPattern[RdataOptions]]:=Rdata[ReactionKineticsModels`GetReaction[builtInModel]];
-Rdata[builtInModel_?ModelNameQ, opts:OptionsPattern[RdataOptions]]:=Rdata[ReactionKineticsModels`GetReaction[builtInModel]];
+Rdata[{builtInModel_?ModelNameQ}, opts:OptionsPattern[RdataOptions]]:=Rdata[ReactionKineticsModels`GetReaction[builtInModel],opts];
+Rdata[builtInModel_?ModelNameQ, opts:OptionsPattern[RdataOptions]]:=Rdata[ReactionKineticsModels`GetReaction[builtInModel],opts];
 Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts] =
 	Module[
 			{ reacs,
