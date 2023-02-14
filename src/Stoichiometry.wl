@@ -190,7 +190,8 @@ Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts
 					"externalspecies" -> (e = allExternals /. "0" -> Sequence[]),
 					(*e = If[MemberQ[complexes,"0"], allExternals, Rest[allExternals]]*)
 					"E" -> Length[e],
-					"reactionsteps" -> reactionsteps, (*steprule*)
+					"genuinereactionsteps" -> reactionsteps,
+					"reactionsteps" -> Rule@@@internalReactionSteps, (*steprule*)
 					"R" -> lrs,
 					"complexes" -> complexes,
 					"fhjgraphedges" -> Rule@@@internalReactionSteps,
