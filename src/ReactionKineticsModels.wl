@@ -6,6 +6,10 @@ ClearAll["ReactionKineticsModels`*"];
 ClearAll["ReactionKineticsModels`Private`*"];
 
 
+(* ::Subsection::Closed:: *)
+(*Reactions*)
+
+
 Reactions::usage = "Reactions is a list of some of the widespread reactions in reaction kinetics.";
 Reactions = Association[
 {
@@ -262,6 +266,35 @@ GetReaction[x_?StringQ] :=
 SetAttributes[GetReaction,Listable]
 GetReaction[x__?StringQ] := GetReaction[{x}];
 GetReaction[___] := (Message[GetReaction::"badarg"]; $Failed)
+
+
+(* ::Subsection::Closed:: *)
+(*References*)
+
+
+GetReactionReferences::usage = "GetReactionReferences[model] returns a list of references for the built-in model";
+ReactionReferences=Association[{
+"Autocatalator"->{"@article{grayscott,
+  title={A new model for oscillatory behaviour in closed systems: the autocatalator},
+  author={Gray, P. and Scott, S. K.},
+  journal={Berichte der Bunsengesellschaft f{\"u}r physikalische Chemie},
+  volume={90},
+  number={11},
+  pages={985--996},
+  year={1986},
+  publisher={Wiley Online Library}"}
+}];
+
+
+(* ::Subsubsection:: *)
+(*Missing references*)
+
+
+Complement[Join[Models,BioModels],Keys[ReactionReferences]]
+
+
+(* ::Subsection:: *)
+(*End*)
 
 
 End[]
