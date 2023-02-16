@@ -57,14 +57,14 @@ Reaction Kinetics: Exercises, Programs and Theorems. Mathematica for determinist
 (*Models*)
 
 
-Get[FindFile["ReactionKineticsModels.wl"]]
+Get[If[$InputFileName==="",NotebookDirectory[],$InputFileName//DirectoryName]<>"ReactionKineticsModels.wl"];
 
 
 (* ::Subsection::Closed:: *)
 (*CHEMKIN*)
 
 
-Get[FindFile["CHEMKIN.wl"]]
+Get[If[$InputFileName==="",NotebookDirectory[],$InputFileName//DirectoryName]<>"CHEMKIN.wl"];
 
 
 (* ::Subsection::Closed:: *)
@@ -124,9 +124,12 @@ ReactionKinetics`$ReactionKineticsVersionNumber::usage = "$ReactionKineticsVersi
 
 ReactionKinetics`$ReactionKineticsPackageLoaded::usage = "$ReactionKineticsPackageLoaded returns true if the current version of ReactionKinetics is loaded.";
 
+ReactionKinetics`$ReactionKineticsPackageDirectory::usage = "$ReactionKineticsPackageDirectory returns source directory of the ReactionKinetics package"
+
 
 $ReactionKineticsVersionNumber = "1.0 [March 25, 2018]";
 $ReactionKineticsPackageLoaded = False;
+$ReactionKineticsPackageDirectory = If[$InputFileName==="",NotebookDirectory[],$InputFileName//DirectoryName];
 
 
 (* ::Subsection::Closed:: *)
@@ -272,7 +275,7 @@ MyMaximize[var_, conlist_, vars_] := -MyMinimize[-var, conlist, vars];
 (*stoichiometry*)
 
 
-Get[FindFile["Stoichiometry.wl"]];
+Get[$ReactionKineticsPackageDirectory<>"Stoichiometry.wl"];
 
 
 (* ::Subsection::Closed:: *)
