@@ -61,7 +61,7 @@ SS[x_] :=
 (* MEMO IMPORT FUNCTIONS *)
 
 MyMemoImport[filename_] := MyMemoImport[filename] =
-		Check[Import[filename,"Text"], Return[$Failed];, {Import::nffil,Import::chtype}];
+		Check[ReadString[filename], Return[$Failed];, {Import::nffil,Import::chtype}];
 
 
 MyImport[filename_, data_] := MyImport[filename, data] =
