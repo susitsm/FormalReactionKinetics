@@ -109,7 +109,8 @@ subgraphedges[graph_,vtceslist_] :=
 			If[ Length[#] === 1, {{}, #}, Join[{EdgeList[Subgraph[graph, #]] /. DirectedEdge->Rule}, {#}]] & /@ vtceslist;
 
 
-RdataOptions = {ExternalSpecies->{},InternalSpecies->{}};
+RdataOptions = {ExternalSpecies->{},InternalSpecies->{},CheckReactionArrows->True};
+DisallowedReactionArrows = {LongRightArrow,LongLeftArrow,LongLeftRightArrow,DoubleLongRightArrow,DoubleLongLeftArrow,DoubleLongLeftRightArrow};
 ModelNameQ[name_?StringQ]:=KeyExistsQ[ReactionKineticsModels`Reactions, name];
 ModelNameQ[name_]:=False;
 Rdata[{builtInModel_?ModelNameQ}, opts:OptionsPattern[RdataOptions]]:=Rdata[ReactionKineticsModels`GetReaction[builtInModel],opts];
@@ -132,6 +133,7 @@ Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts
 				builtin = Check[(#->GetReaction[#])& /@ m, Return[$Failed];, GetReaction::"nvmod"];(**)
 				Rdata[DeleteDuplicates[Join[Flatten[reacs /. builtin], reacs /. Thread[m->Sequence[]]]], opts],
 
+				If[OptionValue[CheckReactionArrows] && (reacs/.Thread[DisallowedReactionArrows->Rule])=!=reacs, Message[ReactionsData::disallowedarrows];Return[$Failed];];
 				reactionsteps = ReactionsToList[reacs] /. (0->"0"); (*"0" - zero complex*)
 				If[OptionValue[ExternalSpecies]=!={} && OptionValue[InternalSpecies]=!={},
 				    (Message[ReactionsData::"internalexternal"]; Return[$Failed]),
@@ -240,6 +242,9 @@ ReactionsData::internalexternal = "Only one of InternalSpecies and ExternalSpeci
 ReactionsData::badname = "At least one of the arguments '`1`' is a non-identified property. Try \
 ReactionsData[\"Properties\"].";
 ReactionsData::wrreac = "Argument `1` may not be in a correct form. Check OpenReactionKineticsPalette[].";
+ReactionsData::disallowedarrows = "The reactions list contains a disallowed arrow type: LongRightArrow, LongLeftArrow, LongLeftRightArrow, DoubleLongRightArrow, DoubleLongLeftArrow or DoubleLongLeftRightArrow.\
+ Replace them with other types of arrow, e.g. LongRightArrow->RightArrow or set CheckReactionArrows->False.\
+Check CheckReactionArrows::usage to see why using these arrow types might cause an error."
 
 
 SyntaxInformation[ReactionsData]={"ArgumentsPattern"->{__,OptionsPattern[]}};

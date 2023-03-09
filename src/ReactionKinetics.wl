@@ -149,6 +149,8 @@ Begin["`Private`"]
 
 ReactionKinetics`Bipartite::usage = "An option for function ShowVolpertGraph. Bipartite \[Rule] True arranges the vertices of the (bipartite) Volpert graph \
 into two disjoint sets (of reaction steps and species) higlighting the edges connecting them.";
+ReactionKinetics`CheckReactionArrows::usage = "An option for disallowing some arrow types from reaction lists. The disallowed arrows are the ones that have higher \
+operator precedence, in these cases A->B+C is actually (A->B)+C which is usually wrong.";
 ReactionKinetics`CombinatorialMoments::usage = "An option for function MomentEquations. If CombinatorialMoments \[Rule] True, then combinatorial moments are taken into account.";
 ReactionKinetics`ComplexColors::usage = "An option for function ShowFHJGraph. E.g. ComplexColors \[Rule] listcolors colors the complexes (i.e. edges) of the FHJ graph according to listcolors.";
 ReactionKinetics`Conditions::usage = "An option for function StationaryPoints. E.g. Conditions \[Rule] list adds the list to the constraints stationary points should obey.";
@@ -2270,9 +2272,7 @@ OpenReactionKineticsPalette[] :=
 		{
 		 {ButtonBox["\[Alpha]"], ButtonBox["\[Beta]"], ButtonBox["\[Gamma]"], ButtonBox["\[Delta]"], ButtonBox["\[Theta]"], ButtonBox["\[Lambda]"]},
 		 {ButtonBox["\"M\""], ButtonBox["\"E\""], ButtonBox["\"R\""], ButtonBox["(\[Placeholder])"], ButtonBox["{\[Placeholder]}"], ButtonBox["[\[Placeholder]]"]},
-		 {ButtonBox["\[ShortRightArrow]"], ButtonBox["\[RightArrow]"], ButtonBox["\[LongRightArrow]"], ButtonBox["\[ShortLeftArrow]"],ButtonBox["\[LeftArrow]"], ButtonBox["\[LongLeftArrow]"]},
-		 {ButtonBox["\[LeftRightArrow]"], ButtonBox["\[LongLeftRightArrow]"], ButtonBox["\[Equilibrium]"], ButtonBox["\[ReverseEquilibrium]"], ButtonBox["\[RightArrowLeftArrow]"], ButtonBox["\[LeftArrowRightArrow]"]},
-		 {ButtonBox["\[DoubleRightArrow]"], ButtonBox["\[DoubleLongRightArrow]"], ButtonBox["\[DoubleLeftArrow]"], ButtonBox["\[DoubleLongLeftArrow]"], ButtonBox["\[DoubleLeftRightArrow]"], ButtonBox["\[DoubleLongLeftRightArrow]"]},
+		 {ButtonBox["\[ShortRightArrow]"], ButtonBox["\[ShortLeftArrow]"],ButtonBox["\[LeftRightArrow]"],ButtonBox["\[DoubleRightArrow]"], ButtonBox["\[DoubleLeftArrow]"], ButtonBox["\[DoubleLeftRightArrow]"]},
 			(*ButtonBox["\[Placeholder]\!\(\*OverscriptBox[\"\[RightArrow]\", \"\[Placeholder]\"]\)\[Placeholder]"]},*)
 		 {ButtonBox[SubscriptBox["\[Placeholder]", "\[Placeholder]"]], ButtonBox[SuperscriptBox["\[Placeholder]", "\[Placeholder]"]], ButtonBox[SubsuperscriptBox["\[Placeholder]", "\[Placeholder]", "\[Placeholder]"]],
 		  ButtonBox["\!\(\*SubscriptBox[\"\[InvisiblePrefixScriptBase]\", \"\[Placeholder]\"]\)\[Placeholder]"], ButtonBox["\!\(\*SuperscriptBox[\"\[InvisiblePrefixScriptBase]\", \"\[Placeholder]\"]\)\[Placeholder]"], ButtonBox["\!\(\*SubsuperscriptBox[\"\", \"\[Placeholder]\", \"\[Placeholder]\"]\)\[Placeholder]"]}
