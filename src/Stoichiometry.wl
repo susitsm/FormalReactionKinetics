@@ -216,7 +216,7 @@ Rdata[{reactions__},opts:OptionsPattern[RdataOptions]] := Rdata[{reactions},opts
 
 PropertiesReactionsData =
 	{
-		"species","M","externalspecies","E","reactionsteps","R","complexes",
+		"species","M","externalspecies","E","genuinereactionsteps","reactionsteps","R","complexes",
 		"fhjgraphedges","fhjweaklyconnectedcomponents","fhjstronglyconnectedcomponents","fhjterminalstronglyconnectedcomponents",
 		"N","L","S","deficiency","\[Alpha]","\[Beta]","\[Gamma]","reactionsteporders","variables","volpertgraph"
 	};
