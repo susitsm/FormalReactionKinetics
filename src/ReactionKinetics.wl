@@ -742,6 +742,37 @@ AbsoluteConcentrationRobustness[{reactions__},opts:OptionsPattern[]] :=
 AbsoluteConcentrationRobustness[___][___] := (Message[AbsoluteConcentrationRobustness::"badarg"]; $Failed)
 
 
+(* ::Subsubsection::Closed:: *)
+(*CanonicReaction*)
+
+
+ReactionKinetics`CanonicReaction::usage = "AbsoluteConcentrationRobustness[{rhs},{variables},options] given the right hand side of a kinetic differential equation and \
+the concentration variables in the same order as the equations returns the canonic reaction with the same kinetics.";
+
+ClearAll[isPositive];
+isPositive[n_?NumberQ]:=n>0;
+isPositive[Times[n_?NumberQ,symb__]]:=n>0;
+Depth1Q[e_]:=Depth[e]==1;
+isPositive[n_?Depth1Q]:=True;
+ToAbs[v_]:=If[isPositive[v],v,-v];
+CanonicBasis[N_,i_]:=Table[If[j==i,1,0],{j,1,N}];
+CreateComplex[{variables__}, {coefficients__}]:=Plus@@(Times@@#&/@Transpose[{ToUpperCase/@(ToString/@{variables}),{coefficients}}]);
+
+
+CanonicReaction[{rhs__},{variables__}]:=Module[{coeffs,grouped,reactionLists,N,f,stringVariables},
+	N = Length[{variables}];
+	coeffs = CoefficientRules[{rhs}, {variables}];
+	grouped=GroupBy[#, isPositive[#[[2]]]&]&/@coeffs;
+	reactionLists = MapIndexed[Function[{assoc, i},
+		{{First[#],First[#]+CanonicBasis[N,First[i]],#[[2]]}&/@Lookup[assoc, True, {}],{First[#],First[#]-CanonicBasis[N,First[i]],-#[[2]]}&/@Lookup[assoc, False, {}]}
+		],grouped];
+	reactionLists = Flatten[reactionLists,2];
+	(* reactionLists is not a list of {alphaVector, betaVector, rate}*)
+	reactionLists = {CreateComplex[{variables},#[[1]]]->CreateComplex[{variables},#[[2]]],#[[3]]}&/@reactionLists;
+	reactionLists
+];
+
+
 (* ::Subsection::Closed:: *)
 (*stochastic approach*)
 
